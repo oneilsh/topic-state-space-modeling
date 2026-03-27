@@ -131,7 +131,7 @@ conjugate priors, and extends to non-conjugate models via gradient-based updates
 ### Why a Framework
 
 The two-stage clinical modeling pipeline described in this project's
-[research design](../../../README.md) — Online HDP for phenotype discovery, Sparse OU
+[research design](TOPIC_STATE_MODELING.md) — Online HDP for phenotype discovery, Sparse OU
 for continuous-time dynamics — both follow this exact pattern. The realization that
 two very different models (discrete bag-of-words vs. continuous time series, closed-form
 vs. gradient-based) share the same computational skeleton motivates a general framework.

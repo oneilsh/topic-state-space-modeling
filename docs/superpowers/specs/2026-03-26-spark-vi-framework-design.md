@@ -136,6 +136,14 @@ for continuous-time dynamics — both follow this exact pattern. The realization
 two very different models (discrete bag-of-words vs. continuous time series, closed-form
 vs. gradient-based) share the same computational skeleton motivates a general framework.
 
+The viability of this pattern at scale is already demonstrated by existing
+implementations: Spark MLlib's `OnlineLDAOptimizer` uses exactly this
+broadcast→mapPartitions→treeAggregate loop for LDA topic modeling, and the
+intel-spark TopicModeling project implements Online HDP in Scala using the same
+distribution strategy. Our contribution is not inventing the pattern, but
+recognizing its generality and providing a framework that makes it accessible for
+arbitrary Bayesian models in pure PySpark.
+
 Rather than implementing each model's Spark orchestration from scratch, we factor out
 the common infrastructure:
 
@@ -440,7 +448,7 @@ Nonparametric Bayesian topic model using the Hierarchical Dirichlet Process
 - `plot_topics(n_words)` — visual topic display
 
 **Clinical use case:** Discover phenotypes from diagnosis codes. Each topic is a
-cluster of co-occurring ICD codes representing a clinical pattern.
+cluster of co-occurring codes representing a clinical pattern.
 
 ### Sparse OU Estimator (Continuous-Time Dynamics)
 
@@ -468,6 +476,11 @@ $\boldsymbol{\mu}$ is the mean-reversion target, and $\Sigma$ is the diffusion m
 - `forecast(state, horizon)` — predicted trajectory with uncertainty
 - `simulate(n_entities, n_timepoints)` — generate synthetic trajectories
 - `interaction_graph()` — NetworkX or adjacency representation of $A$
+
+**Implementation note:** When the input is topic proportions (which live on the
+simplex), an isometric log-ratio (ILR) transform maps them to unconstrained
+$\mathbb{R}^{K-1}$ space before OU modeling. The `prepare_data` step handles this
+transparently, and results are mapped back to the simplex for interpretation.
 
 **Clinical use case:** Model causal dynamics between phenotypes discovered by the HDP.
 The sparse $A$ matrix reveals which phenotypes drive or inhibit other phenotypes,
@@ -593,9 +606,9 @@ override `combine_stats`.
 ### Long-format DataFrames as user convention
 
 Pre-built models accept long-format DataFrames with column name kwargs. This is the
-most natural format for clinical data (one row per visit-diagnosis, one row per
-patient-timepoint-measurement) and requires no user-side reshaping. The model's
-`prepare_data` handles conversion to internal format.
+most natural format for tabular clinical data regardless of source system (one row
+per visit-diagnosis, one row per patient-timepoint-measurement) and requires no
+user-side reshaping. The model's `prepare_data` handles conversion to internal format.
 
 ### JSON + NumPy export over pickle
 
@@ -659,6 +672,28 @@ formal DP guarantees. The framework's structure is naturally compatible; the res
 challenge is calibrating noise per model family to maintain utility. Generative models
 (HDP, OU) are particularly well-suited since their outputs are population-level
 distributions, not individual records.
+
+### On-Device Inference
+
+Trained models are compact (a 100-topic HDP over ~70k codes is ~30-60MB; an OU drift
+matrix for 100 topics is trivially small) and inference is lightweight matrix algebra.
+This opens the possibility of shipping trained models directly to patient devices —
+phones, tablets, browsers — where inference runs locally against the patient's own
+data without transmitting it externally. The population-level model arrives on-device;
+the sensitive patient data never leaves. Implementation would require a lightweight
+inference runtime (Swift/Kotlin native, WASM/JS for web, or a minimal C library),
+but the math is simple enough that no ML framework is needed on-device.
+
+### Interoperability with Clinical Data Standards
+
+The framework trains on whatever vocabulary the data uses (e.g., ICD-10, SNOMED CT,
+local codes). At inference time, a thin vocabulary mapping layer could translate
+incoming records from different coding systems to the model's vocabulary. For
+standard terminologies, static mapping tables (such as those maintained by OMOP)
+would suffice. Unmappable codes can be gracefully skipped — inference from a partial
+set of codes is still useful. This is fundamentally easier than full data
+harmonization because inference tolerates missing codes in a way that training
+pipeline construction does not.
 
 ### Federated Learning Across Sites
 

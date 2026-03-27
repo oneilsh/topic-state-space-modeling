@@ -64,17 +64,20 @@ discovered phenotypes.
 
 ```mermaid
 graph LR
-    A[Billions of<br/>Clinical Visits] --> B[Online HDP<br/>Topic Model]
-    B --> C[Per-Visit Topic<br/>Proportions θ]
-    C --> D[Sparse Multivariate<br/>OU Process]
-    D --> E[Causal Graph<br/>Between Phenotypes]
-    D --> F[Patient Trajectory<br/>Prediction]
-    D --> G[Clinical Mode<br/>Discovery]
+    A(["Billions of<br/>Clinical Visits"]) --> B(["Online HDP<br/>Topic Model"])
+    B --> C(["Per-Visit Topic<br/>Proportions θ"])
+    C --> D(["Sparse Multivariate<br/>OU Process"])
+    D --> E(["Causal Graph<br/>Between Phenotypes"])
+    D --> F(["Patient Trajectory<br/>Prediction"])
+    D --> G(["Clinical Mode<br/>Discovery"])
 
-    style A fill:#f9f,stroke:#333
-    style E fill:#bfb,stroke:#333
-    style F fill:#bfb,stroke:#333
-    style G fill:#bfb,stroke:#333
+    style A fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style B fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style C fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style D fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style E fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style F fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style G fill:#cce5ff,stroke:#0069d9,stroke-width:2px
 ```
 
 **Key properties:**
@@ -320,51 +323,72 @@ The variance $\Gamma(\Delta t)$ also grows with the gap, correctly reflecting
 increased uncertainty for patients not seen recently.
 
 ```mermaid
-graph TB
-    subgraph "Short Gap (days)"
-        S1[Visit 1<br/>α_s] -->|"e^{A·2} ≈ I"| S2[Visit 2<br/>≈ α_s]
+graph LR
+    subgraph SHORT ["Short Gap (days)"]
+        S1(["Visit 1<br/>α_s"]) -->|"e^{A·2} ≈ I"| S2(["Visit 2<br/>≈ α_s"])
     end
 
-    subgraph "Medium Gap (weeks)"
-        M1[Visit 1<br/>α_s] -->|"A interactions<br/>play out"| M2[Visit 2<br/>cascaded state]
+    subgraph MEDIUM ["Medium Gap (weeks)"]
+        M1(["Visit 1<br/>α_s"]) -->|"A interactions<br/>play out"| M2(["Visit 2<br/>cascaded state"])
     end
 
-    subgraph "Long Gap (years)"
-        L1[Visit 1<br/>α_s] -->|"e^{A·730} → 0"| L2[Visit 2<br/>≈ μ baseline]
+    subgraph LONG ["Long Gap (years)"]
+        L1(["Visit 1<br/>α_s"]) -->|"e^{A·730} → 0"| L2(["Visit 2<br/>≈ μ baseline"])
     end
+
+    S2 ~~~ M1
+    M2 ~~~ L1
+
+    style S1 fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style S2 fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style M1 fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style M2 fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style L1 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style L2 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
 ```
 
 ### How the Stages Connect
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph Stage1["Stage 1: Phenotype Discovery (Online HDP)"]
-        V[Clinical Visits<br/>ICD code sets] --> HDP[Online HDP<br/>PySpark]
-        HDP --> Theta["Per-visit θ vectors<br/>(sparse topic proportions)"]
+        V(["Clinical Visits<br/>ICD code sets"]) --> HDP(["Online HDP<br/>PySpark"])
+        HDP --> Theta(["Per-visit θ vectors<br/>(sparse topic proportions)"])
     end
 
     subgraph Transform["Transformation"]
-        Theta --> ILR["ILR Transform<br/>(simplex → ℝ)"]
-        ILR --> Alpha["Per-visit α vectors<br/>(unconstrained)"]
-        Alpha --> Group["Group by Patient<br/>+ Timestamps"]
-        Group --> Traj["Patient Trajectories<br/>(α_t1, α_t2, ..., α_tn)"]
+        Theta --> ILR(["ILR Transform<br/>(simplex → ℝ)"])
+        ILR --> Alpha(["Per-visit α vectors<br/>(unconstrained)"])
+        Alpha --> Group(["Group by Patient<br/>+ Timestamps"])
+        Group --> Traj(["Patient Trajectories<br/>(α_t1, α_t2, ..., α_tn)"])
     end
 
     subgraph Stage2["Stage 2: Causal Dynamics (Sparse OU)"]
-        Traj --> OU["Sparse OU Estimation<br/>PySpark"]
-        OU --> AMatrix["A Matrix<br/>(causal graph)"]
-        OU --> Mu["μ Vector<br/>(baseline state)"]
-        OU --> Sigma["Σ Matrix<br/>(volatility)"]
+        Traj --> OU(["Sparse OU Estimation<br/>PySpark"])
+        OU --> AMatrix(["A Matrix<br/>(causal graph)"])
+        OU --> Mu(["μ Vector<br/>(baseline state)"])
+        OU --> Sigma(["Σ Matrix<br/>(volatility)"])
     end
 
     subgraph Outputs["Interpretable Outputs"]
-        AMatrix --> Causal["Causal Interaction<br/>Graph"]
-        AMatrix --> Eigen["Eigenanalysis<br/>(modes + timescales)"]
-        Mu --> Baseline["Baseline Patient<br/>Profile"]
-        AMatrix --> Predict["Trajectory<br/>Prediction"]
+        AMatrix --> Causal(["Causal Interaction<br/>Graph"])
+        AMatrix --> Eigen(["Eigenanalysis<br/>(modes + timescales)"])
+        Mu --> Baseline(["Baseline Patient<br/>Profile"])
+        AMatrix --> Predict(["Trajectory<br/>Prediction"])
         Mu --> Predict
         Sigma --> Predict
     end
+
+    style V fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style HDP fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Theta fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style ILR fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Traj fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style OU fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Causal fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style Eigen fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style Baseline fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style Predict fill:#cce5ff,stroke:#0069d9,stroke-width:2px
 ```
 
 ---
@@ -381,19 +405,26 @@ architecture that Spark uses for its built-in LDA implementation.
 ```mermaid
 flowchart LR
     subgraph Driver["Driver (single node)"]
-        Lambda["λ (T×W topic-word matrix)"]
-        Sticks["var_sticks (corpus-level)"]
-        Update["Stochastic gradient update"]
+        Lambda(["λ (T×W topic-word matrix)"])
+        Sticks(["var_sticks (corpus-level)"])
+        Update(["Stochastic gradient update"])
     end
 
     subgraph Workers["Workers (distributed)"]
-        Doc1["Partition 1:<br/>per-visit E-step"]
-        Doc2["Partition 2:<br/>per-visit E-step"]
-        Doc3["Partition N:<br/>per-visit E-step"]
+        Doc1(["Partition 1:<br/>per-visit E-step"])
+        Doc2(["Partition 2:<br/>per-visit E-step"])
+        Doc3(["Partition N:<br/>per-visit E-step"])
     end
 
     Driver -->|"broadcast Elogβ"| Workers
     Workers -->|"treeAggregate<br/>sufficient stats"| Driver
+
+    style Lambda fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Sticks fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Update fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Doc1 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style Doc2 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style Doc3 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
 ```
 
 **Per-iteration data flow:**
@@ -404,7 +435,7 @@ flowchart LR
    runs variational inference for its visits. For each visit, iterate between:
    - $\phi$ updates (document-level topic assignments)
    - $\gamma$ updates (document-level topic proportions)
-   - $\text{var\_phi}$ updates (corpus-level topic assignments)
+   - `var_phi` updates (corpus-level topic assignments)
 3. **treeAggregate** ($O(T \times V)$, tree depth 2): Workers sum sufficient
    statistics and send the aggregated result to the driver.
 4. **Driver M-step**: Stochastic natural gradient update of $\lambda$ and
@@ -442,29 +473,38 @@ A_edges = {
 ```mermaid
 flowchart TD
     subgraph Broadcast["Broadcast (small)"]
-        Edges["A edge list<br/>{(i,j): val, ...}"]
-        MuVec["μ baseline vector"]
+        Edges(["A edge list<br/>{(i,j): val, ...}"])
+        MuVec(["μ baseline vector"])
     end
 
     subgraph Worker1["Worker: Patient X"]
-        Active1["Active topics: {3, 7, 15}"]
-        Sub1["Build 3×3 dense A_local<br/>from edges with both<br/>endpoints in {3, 7, 15}"]
-        Lik1["Compute likelihood +<br/>gradient over visits"]
-        Grad1["Return sparse gradient<br/>{(3,7): 0.02, (15,3): -0.01}"]
+        Active1(["Active topics: {3, 7, 15}"])
+        Sub1(["Build 3×3 dense A_local<br/>from edges with both<br/>endpoints in {3, 7, 15}"])
+        Lik1(["Compute likelihood +<br/>gradient over visits"])
+        Grad1(["Return sparse gradient<br/>{(3,7): 0.02, (15,3): -0.01}"])
     end
 
     subgraph Worker2["Worker: Patient Y"]
-        Active2["Active topics: {7, 15, 88, 102}"]
-        Sub2["Build 4×4 dense A_local<br/>from relevant edges"]
-        Lik2["Compute likelihood +<br/>gradient over visits"]
-        Grad2["Return sparse gradient"]
+        Active2(["Active topics: {7, 15, 88, 102}"])
+        Sub2(["Build 4×4 dense A_local<br/>from relevant edges"])
+        Lik2(["Compute likelihood +<br/>gradient over visits"])
+        Grad2(["Return sparse gradient"])
     end
 
     Broadcast --> Worker1
     Broadcast --> Worker2
-    Grad1 --> Agg["treeAggregate:<br/>sum sparse gradients"]
+    Grad1 --> Agg(["treeAggregate:<br/>sum sparse gradients"])
     Grad2 --> Agg
-    Agg --> Update["Driver: variational<br/>update of A edges"]
+    Agg --> Update(["Driver: variational<br/>update of A edges"])
+
+    style Edges fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style MuVec fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Active1 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style Active2 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style Grad1 fill:#d4edda,stroke:#28a745,stroke-width:1px
+    style Grad2 fill:#d4edda,stroke:#28a745,stroke-width:1px
+    style Agg fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style Update fill:#fff3cd,stroke:#d4a017,stroke-width:2px
 ```
 
 **Per-patient likelihood computation.** For a patient with visits at times
@@ -573,15 +613,15 @@ phenotype $j$ being elevated affects the rate of change of phenotype $i$.
 
 ```mermaid
 graph LR
-    Inf[Infection<br/>Phenotype] -->|"+0.8<br/>(triggers)"| Abx[Antibiotic<br/>Phenotype]
-    Inf -->|"+0.3<br/>(nephrotoxicity)"| Renal[Renal<br/>Phenotype]
+    Inf(["Infection<br/>Phenotype"]) -->|"+0.8<br/>(triggers)"| Abx(["Antibiotic<br/>Phenotype"])
+    Inf -->|"+0.3<br/>(nephrotoxicity)"| Renal(["Renal<br/>Phenotype"])
     Abx -->|"-0.6<br/>(treats)"| Inf
     Abx -->|"+0.2<br/>(side effect)"| Renal
     Renal -->|"-0.1<br/>(limits options)"| Abx
 
-    style Inf fill:#fbb,stroke:#333
-    style Abx fill:#bbf,stroke:#333
-    style Renal fill:#fbf,stroke:#333
+    style Inf fill:#f8d7da,stroke:#c0392b,stroke-width:2px
+    style Abx fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style Renal fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
 ```
 
 **Interpretation:**

@@ -45,17 +45,20 @@ general-purpose and accommodate any model that fits the distributed VI pattern.
 
 ```mermaid
 graph LR
-    A[User DataFrame<br/>long format] --> B[Model.prepare_data<br/>reshape & validate]
-    B --> C[VIRunner.fit<br/>distributed VI loop]
-    C --> D[VIResult]
-    D --> E[Notebook Display<br/>_repr_html_]
-    D --> F[Model Export<br/>JSON + .npy]
-    D --> G[Downstream Use<br/>transform / simulate / forecast]
+    A(["User DataFrame<br/>long format"]) --> B(["Model.prepare_data<br/>reshape & validate"])
+    B --> C(["VIRunner.fit<br/>distributed VI loop"])
+    C --> D(["VIResult"])
+    D --> E(["Notebook Display<br/>_repr_html_"])
+    D --> F(["Model Export<br/>JSON + .npy"])
+    D --> G(["Downstream Use<br/>transform / simulate / forecast"])
 
-    style A fill:#f9f,stroke:#333
-    style E fill:#bfb,stroke:#333
-    style F fill:#bfb,stroke:#333
-    style G fill:#bfb,stroke:#333
+    style A fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style B fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style C fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style D fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style E fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style F fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style G fill:#cce5ff,stroke:#0069d9,stroke-width:2px
 ```
 
 **Key properties:**
@@ -78,34 +81,30 @@ Variational inference for Bayesian models with conditionally conjugate or
 gradient-amenable structure decomposes into a natural distributed pattern:
 
 ```mermaid
-graph TD
-    subgraph Driver
-        G[Global Parameters]
-        U[Global Update]
+graph LR
+    subgraph CLUSTER ["Spark Cluster"]
+        direction LR
+        G(["Global<br/>Parameters"]) -->|broadcast| W1(["Worker 1<br/>local step"])
+        G -->|broadcast| W2(["Worker 2<br/>local step"])
+        G -->|broadcast| WN(["Worker N<br/>local step"])
+        W1 -->|summary stats| AG(["Aggregate<br/>global step"])
+        W2 -->|summary stats| AG
+        WN -->|summary stats| AG
+        AG -->|iterate| G
     end
 
-    subgraph "Worker 1"
-        L1[Local Update<br/>partition 1]
-    end
+    AG -->|converged| EX(["Export"])
+    EX --> MH(["Model Hosting<br/>Service"])
+    EX --> PH(["On-Device<br/>Inference"])
 
-    subgraph "Worker 2"
-        L2[Local Update<br/>partition 2]
-    end
-
-    subgraph "Worker N"
-        LN[Local Update<br/>partition N]
-    end
-
-    G -->|broadcast| L1
-    G -->|broadcast| L2
-    G -->|broadcast| LN
-    L1 -->|sufficient stats| U
-    L2 -->|sufficient stats| U
-    LN -->|sufficient stats| U
-    U --> G
-
-    style G fill:#ffd,stroke:#333
-    style U fill:#ffd,stroke:#333
+    style G fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style AG fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style W1 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style W2 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style WN fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style EX fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style MH fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style PH fill:#cce5ff,stroke:#0069d9,stroke-width:2px
 ```
 
 Each iteration:
@@ -286,12 +285,12 @@ The data pipeline has two layers:
 
 ```mermaid
 graph LR
-    A["User DataFrame<br/>(long format)"] -->|"model.prepare_data(df, doc_col=..., word_col=...)"| B["Internal DataFrame<br/>(matches data_schema)"]
-    B -->|"framework partitions & converts"| C["Partition arrays<br/>(NumPy on workers)"]
+    A(["User DataFrame<br/>(long format)"]) -->|"model.prepare_data(df, doc_col=..., word_col=...)"| B(["Internal DataFrame<br/>(matches data_schema)"])
+    B -->|"framework partitions & converts"| C(["Partition arrays<br/>(NumPy on workers)"])
 
-    style A fill:#f9f,stroke:#333
-    style B fill:#ffd,stroke:#333
-    style C fill:#bfb,stroke:#333
+    style A fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style B fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style C fill:#d4edda,stroke:#28a745,stroke-width:2px
 ```
 
 **User-facing (pre-built models):** Long-format DataFrames. Users pass column names

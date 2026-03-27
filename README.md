@@ -1,103 +1,158 @@
 # Bayesian State Modeling for Clinical Phenotype Discovery and Patient Outcomes
 
-This project develops a distributed Bayesian state modeling framework for
-unsupervised clinical phenotype discovery and outcome characterization, with the
-goal of enabling personalized, patient-facing health insights.
+This project develops a distributed [Bayesian variational-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods) (VI) state modeling framework for unsupervised clinical phenotype discovery and outcome characterization, with the goal of **enabling personalized, patient-facing health insights, including outcome prediction and simulation conditioned
+on population-derived statistical patterns.**
+
+<div style="max-width: 70%;">
 
 ```mermaid
 graph LR
-    A[Millions of<br/>Clinical Visits] --> B[Unsupervised<br/>Phenotype Discovery]
-    B --> C[Patient State<br/>Dynamics]
-    C --> D[Outcome<br/>Characterization]
-    D --> E[Patient-Facing<br/>Insights]
+    A(["Clinical Data"]) --> B(["Bayesian VI<br/>Phenotype Discovery"])
+    B --> C(["Phenotype<br/>Profiles"])
+    C --> D(["Outcome<br/>Characterization"])
+    C --> E(["Simulation"])
+    C --> F(["Prediction"])
+    D & E & F --> G(["Patient-Facing<br/>Insights"])
 
-    style A fill:#f9f,stroke:#333
-    style E fill:#bfb,stroke:#333
+    style A fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style B fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style C fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style D fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style E fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style F fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style G fill:#d4edda,stroke:#28a745,stroke-width:2px
 ```
 
-The work spans three layers: a research design for the clinical modeling approach,
-a general-purpose software framework for distributed variational inference, and a
-milestone plan for delivering these capabilities within the CHARMTwinsight platform.
+</div>
+
+The work spans three layers: a research design for the clinical modeling approach, a reusable software framework for fitting Bayesian models at scale on Spark, and a milestone plan for delivering these capabilities within the CHARMTwinsight platform.
 
 ---
 
 ## How It Works
 
-Clinical visits are bags of diagnosis codes. The framework discovers latent
-phenotypes — recurring patterns of co-occurring diagnoses — then models how
-individual patients move through those phenotypes over time.
+Following well-established modeling techniques, clinical records are organized into 
+'documents', where each document is a collection of diagnosis, drug, procedure, etc. 
+codes. What constitutes a "document" is flexible: a single visit, a
+patient's complete history, or records grouped by time window, depending on the
+clinical question. We'll implement a modern Bayesian nonparametric model, the Hierarchical
+Dirichlet Process (HDP), to discover **clinical phenotypes**: recurring patterns
+of diagnoses that tend to appear together. The model decides *how many* phenotypes
+exist rather than requiring that number as input, and each phenotype is a full
+distribution over the diagnosis vocabulary rather than a hard cluster assignment.
 
-```mermaid
-graph TD
-    subgraph "Stage 1: Phenotype Discovery"
-        V1["Visit: E11.9, I10,<br/>E78.5, Z79.84"] --> T1["Metabolic<br/>Syndrome"]
-        V2["Visit: J44.1,<br/>J96.0, R06.0"] --> T2["Respiratory<br/>Failure"]
-        V3["Visit: F32.1,<br/>G47.0, R45.8"] --> T3["Depression /<br/>Sleep"]
-    end
-
-    subgraph "Stage 2: Patient Dynamics"
-        T1 & T2 & T3 --> TS["Patient Phenotype<br/>Trajectory Over Time"]
-        TS --> IG["Interaction Graph:<br/>Which phenotypes<br/>drive others?"]
-        TS --> PR["Outcome Prediction:<br/>Where is this patient<br/>heading?"]
-    end
-
-    style T1 fill:#ffd,stroke:#333
-    style T2 fill:#ffd,stroke:#333
-    style T3 fill:#ffd,stroke:#333
-    style IG fill:#bfb,stroke:#333
-    style PR fill:#bfb,stroke:#333
-```
-
-## Distributed Training, Compact Models
-
-The framework distributes computation across Spark workers using a
-broadcast→update→aggregate pattern. Trained models are compact population-level
-parameters (~30-60MB) containing no patient data — small enough to ship to a
-patient's phone for private, on-device inference.
+Because the approach is Bayesian, the model quantifies uncertainty at every level:
+which diagnoses characterize which phenotype, how strongly a given document
+reflects each phenotype, and how confident those estimates are given the available
+data. The per-document phenotype profiles then serve as rich, interpretable
+features for downstream outcome characterization, simulation, and prediction
+tasks.
 
 ```mermaid
 graph LR
-    subgraph "Training (Spark Cluster)"
-        direction TB
-        G["Global Parameters"] -->|broadcast| W1["Worker 1<br/>local update"]
-        G -->|broadcast| W2["Worker 2<br/>local update"]
-        G -->|broadcast| W3["Worker N<br/>local update"]
-        W1 -->|stats| AG["Aggregate &<br/>Update"]
-        W2 -->|stats| AG
-        W3 -->|stats| AG
-        AG --> G
+    G0(["G₀ base distribution<br/>over phenotypes"]) --> beta(["β₁ ... β_K<br/>phenotype distributions<br/>over diagnosis codes<br/>(K determined by data)"])
+    G0 --> theta(["θⱼ phenotype<br/>mixture weights"])
+    beta --> z(["zⱼₙ phenotype<br/>assignment"])
+    theta --> z --> w(["wⱼₙ observed<br/>diagnosis code"])
+    theta --> PR(["Probabilistic<br/>phenotype profiles"])
+
+    subgraph SHARED ["Shared across all documents"]
+        G0
+        beta
     end
 
-    subgraph "Deployment"
-        direction TB
-        EX["Export<br/>JSON + .npy"] --> MH["Model Hosting<br/>Service"]
-        EX --> PH["Patient Device<br/>On-Device Inference"]
+    subgraph PERDOC ["For each document (patient, visit, etc.)"]
+        theta
+        z
+        w
     end
 
-    AG --> EX
+    style G0 fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style beta fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style theta fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style z fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style w fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
+    style PR fill:#d4edda,stroke:#28a745,stroke-width:2px
+```
 
-    style G fill:#ffd,stroke:#333
-    style MH fill:#bfb,stroke:#333
-    style PH fill:#bfb,stroke:#333
+
+The key difference from Latent Dirichlet Allocation (LDA, a common choice for clinical modeling
+that we have previously applied on large-scale data) is that the HDP places a Dirichlet Process prior over the phenotype space via the base distribution G₀, so the number of phenotypes
+is automatically discovered and grows with the data. As a generative process, each document (patient, visit, etc.) draws its own mixture weights θ from G₀, and each observed clinical event is generated by first selecting a phenotype (z) then drawing from that phenotype's distribution (β).
+
+The HDP is fit using **variational inference**, an optimization-based approach
+to Bayesian estimation that scales to large datasets. The algorithm iterates
+between local and global updates, minimizing the KL divergence between an
+approximate posterior *q* and the true posterior:
+
+$$\mathcal{L}(q) = \mathbb{E}_q[\log p(\mathbf{w}, \boldsymbol{\theta}, \boldsymbol{\beta})] - \mathbb{E}_q[\log q(\boldsymbol{\theta}, \boldsymbol{\beta})]$$
+
+where **w** are the observed diagnosis codes, **θ** are per-document phenotype
+mixture weights, and **β** are the phenotype distributions. In practice each
+iteration:
+
+1. **Local step**: for each document, update the approximate posterior over its
+   phenotype mixture weights, holding the global phenotype definitions fixed.
+2. **Global step**: aggregate the local results across all documents to update
+   the phenotype distributions themselves (and the number of active phenotypes).
+
+## spark-vi: A Reusable Framework for Distributed Bayesian Modeling
+
+The HDP will be the first model built on **spark-vi**, a new general-purpose PySpark
+framework for fitting Bayesian models at scale. The framework is designed to be
+reusable: a model author defines the model-specific math, and the framework
+handles distribution across a Spark cluster, training loop management,
+convergence monitoring, and model export. Other Bayesian models that follow the
+same distribute-and-aggregate pattern can plug in without re-implementing the
+infrastructure.
+
+Trained models are compact population-level distributional parameters (~30-60 MB) containing no
+patient data and minimal-to-no reidentification risk, and small enough to export and deploy to a model hosting service or a patient's device for private, on-device usage.
+
+```mermaid
+graph LR
+    subgraph CLUSTER ["Spark Cluster"]
+        direction LR
+        G(["Global<br/>Parameters"]) -->|broadcast| W1(["Worker 1<br/>local step"])
+        G -->|broadcast| W2(["Worker 2<br/>local step"])
+        G -->|broadcast| WN(["Worker N<br/>local step"])
+        W1 -->|summary stats| AG(["Aggregate<br/>global step"])
+        W2 -->|summary stats| AG
+        WN -->|summary stats| AG
+        AG -->|iterate| G
+    end
+
+    AG -->|converged| EX(["Export"])
+    EX --> MH(["Model Hosting<br/>Service"])
+    EX --> PH(["On-Device<br/>Inference"])
+
+    style G fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style AG fill:#fff3cd,stroke:#d4a017,stroke-width:2px
+    style W1 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style W2 fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style WN fill:#e8d4f0,stroke:#7b2d8e,stroke-width:1px
+    style EX fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style MH fill:#cce5ff,stroke:#0069d9,stroke-width:2px
+    style PH fill:#cce5ff,stroke:#0069d9,stroke-width:2px
 ```
 
 ---
 
 ## Documents
 
-- **[Topic-State Modeling Research Design](TOPIC_STATE_MODELING.md)** — The scientific
-  foundation. Describes a two-stage approach: discovering clinical phenotypes from
-  diagnosis code data using a Hierarchical Dirichlet Process, then modeling patient
-  dynamics through those phenotypes using a sparse Ornstein-Uhlenbeck process.
-  Includes background, model architecture, computational design, and references.
+- **[Topic-State Modeling Research Design](TOPIC_STATE_MODELING.md)** -- The scientific
+  foundation. Describes the Bayesian approach to discovering clinical phenotypes from
+  diagnosis code data using a Hierarchical Dirichlet Process, with discussion of
+  model architecture, computational design, and extensions for modeling patient
+  dynamics.
 
-- **[spark-vi Framework Design](SPARK_VI_FRAMEWORK.md)** — The software architecture.
+- **[spark-vi Framework Design](SPARK_VI_FRAMEWORK.md)** -- The software architecture.
   A PySpark-native framework for distributed variational inference where model authors
   implement the math and the framework handles Spark orchestration, training loops,
   diagnostics, and model export. Notebook-first, with compact privacy-friendly model
   artifacts suitable for lightweight deployment including on-device inference.
 
-- **[Milestones (C3.T3b / C3.T4b)](MILESTONES.md)** — The delivery plan. Eight
+- **[Milestones (C3.T3b / C3.T4b)](MILESTONES.md)** -- The delivery plan. Eight
   quarterly milestones across two years: Year 3 builds the framework and applies it
   to clinical data; Year 4 integrates trained models with CHARMTwinsight model hosting
   and explores patient-facing outcome capabilities.

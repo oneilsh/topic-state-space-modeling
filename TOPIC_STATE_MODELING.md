@@ -779,6 +779,33 @@ statistically appropriate (don't claim causal relationships you can't support) b
 means the model may miss real interactions for uncommon conditions. Hierarchical or
 transfer learning approaches could help borrow strength across related phenotypes.
 
+### Nonlinear Drift and Multi-Attractor Dynamics
+
+The standard OU process has a linear restoring force: the drift $A(\mu - \alpha_t)$
+pulls harder when the state is further from baseline. This may be unrealistic for
+clinical dynamics — severely ill patients don't necessarily recover faster than mildly
+ill ones, progressive conditions may never revert to a healthy baseline, and threshold
+effects (e.g., organ failure cascades) can qualitatively change the dynamics at large
+displacements. More generally, the single equilibrium $\mu$ cannot represent clinical
+populations with multiple stable states (healthy, chronically managed, end-stage).
+
+Replacing the linear drift with a nonlinear function $f(\alpha_t)$ addresses these
+concerns while remaining compatible with the spark-vi framework's distributed pattern
+(the changes are entirely within `local_update`). Practical options include: **local
+linearization** (computing a state-dependent Jacobian $J(\alpha_s)$ at each
+observation and reusing the OU transition density with a local drift matrix — an
+Extended Kalman Filter approach that preserves closed-form transitions),
+**Euler-Maruyama discretization** (subdividing inter-observation intervals into small
+steps with approximate Gaussian transitions — more general but requires path
+imputation between visits), and **polynomial drift corrections** (e.g., adding a cubic
+term $C \cdot (\mu - \alpha)^{\circ 3}$ that weakens the restoring force at large
+displacements). Clinically motivated drift forms include saturating forces
+($A \cdot \tanh(B(\mu - \alpha))$, where recovery rate plateaus for very sick
+patients) and asymmetric drift (different interaction matrices for deterioration vs.
+recovery). The linear OU is likely adequate for the primary goal of discovering causal
+interaction structure via $A$, but long-horizon prediction and trajectory simulation
+would benefit from nonlinear extensions.
+
 ### Periodic and Seasonal Extensions
 
 While the OU process captures timescales through eigenvalues of $A$, it does not

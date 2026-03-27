@@ -660,6 +660,25 @@ challenge is calibrating noise per model family to maintain utility. Generative 
 (HDP, OU) are particularly well-suited since their outputs are population-level
 distributions, not individual records.
 
+### Federated Learning Across Sites
+
+The framework's computational pattern — local sufficient statistics aggregated into
+global updates — maps directly to a federated learning setting. "Local" currently means
+"Spark partition," but nothing requires partitions to be co-located. If multiple
+organizations each compute sufficient statistics on their own data, those statistics
+can be summed and used for the global update, producing a result mathematically
+identical to training on the combined data. This is federated averaging applied to
+variational inference rather than SGD, and is arguably better suited to federation:
+sufficient statistics are additive and interpretable (not opaque weight deltas), no
+patient data crosses organizational boundaries (stats are population-level aggregates
+by construction), and the convergence theory for stochastic natural gradient VI already
+covers the non-IID case where each "minibatch" comes from a different data distribution
+— the core difficulty that makes federated SGD fragile. The practical question is
+communication overhead (how many rounds of stat exchange are needed), but for models
+like the HDP with large per-site datasets, even a few rounds should suffice.
+Federated nonparametric topic modeling for multi-site clinical data would be a
+meaningful research contribution in its own right.
+
 ---
 
 ## References

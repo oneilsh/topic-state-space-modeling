@@ -396,6 +396,31 @@ For each iteration of the sparse OU estimator:
 4. **Driver**: proximal gradient step with $L_1$ penalty on $A$ — entries that
    shrink below threshold are dropped from the edge list.
 
+**Variational Bayes variant (recommended).** The estimation algorithm above describes
+penalized MLE — point estimates of $A$, $\mu$, and $\Sigma$ with $L_1$ sparsity.
+A variational Bayes formulation is preferable for several reasons:
+
+- **Posterior uncertainty on edges.** Rather than a binary "this edge exists / doesn't
+  exist" from L1 thresholding, the posterior gives calibrated confidence: "95%
+  credible interval for $A_{ij}$ excludes zero" vs. "wide posterior centered near
+  zero." This is more natural for exploratory causal analysis.
+- **Smoother sparsity.** A horseshoe or spike-and-slab prior on entries of $A$
+  provides continuous shrinkage instead of the hard threshold of $L_1$, improving
+  numerical stability — edges don't pop in and out discontinuously during
+  optimization.
+- **Consistency with Stage 1.** The HDP stage already uses online variational Bayes
+  (the same family of inference that Spark MLlib uses for its built-in LDA). Making
+  both stages variational Bayesian gives a coherent framework where uncertainty
+  propagates naturally.
+- **Same computational structure.** Each iteration of variational optimization
+  evaluates the same per-patient Gaussian likelihood with the same sparse subblock
+  structure. The cost per iteration is essentially identical to MLE; the variational
+  objective just adds an entropy/KL term computed on the driver. Total wall time
+  increases modestly (more iterations to converge) but parallelism is unchanged.
+- **Regularization of rare interactions.** With K=300 topics, many topic pairs have
+  limited data. The prior regularizes these naturally, producing stable estimates
+  where MLE might be erratic.
+
 ### Scaling Analysis
 
 **Stage 1 (HDP) scaling:**
@@ -691,3 +716,87 @@ confounders (e.g., a medication that affects two phenotypes simultaneously but i
 in the diagnosis code vocabulary) can create spurious entries in $A$. Enriching the
 "vocabulary" with procedure codes, medications, and lab results would mitigate this,
 at the cost of a larger and more heterogeneous feature space for the HDP.
+
+---
+
+## References
+
+### Topic Models
+
+- **LDA.** Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent Dirichlet
+  Allocation. *Journal of Machine Learning Research*, 3, 993-1022.
+  [paper](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)
+
+- **HDP.** Teh, Y. W., Jordan, M. I., Beal, M. J., & Blei, D. M. (2006).
+  Hierarchical Dirichlet Processes. *Journal of the American Statistical
+  Association*, 101(476), 1566-1581.
+  [doi](https://doi.org/10.1198/016214506000000302)
+
+- **Online LDA.** Hoffman, M. D., Blei, D. M., & Bach, F. (2010). Online Learning
+  for Latent Dirichlet Allocation. *Advances in Neural Information Processing
+  Systems* 23 (NeurIPS). NeurIPS Test of Time Award, 2021.
+  [paper](https://proceedings.neurips.cc/paper/2010/hash/71f6278d140af599e06ad9bf1ba03cb0-Abstract.html)
+
+- **Online HDP.** Wang, C., Paisley, J., & Blei, D. M. (2011). Online Variational
+  Inference for the Hierarchical Dirichlet Process. *Proceedings of the 14th
+  International Conference on Artificial Intelligence and Statistics (AISTATS)*,
+  PMLR 15:752-760.
+  [paper](https://proceedings.mlr.press/v15/wang11a.html)
+
+- **DTM.** Blei, D. M. & Lafferty, J. D. (2006). Dynamic Topic Models. *Proceedings
+  of the 23rd International Conference on Machine Learning (ICML)*, 113-120.
+  [doi](https://doi.org/10.1145/1143844.1143859)
+
+### Topic Models for Clinical Data
+
+- **MixEHR.** Li, Y., Nair, P., Lu, X. H., Wen, Z., Wang, Y., et al. (2020).
+  Inferring Multimodal Latent Topics from Electronic Health Records. *Nature
+  Communications*, 11, 2536.
+  [doi](https://doi.org/10.1038/s41467-020-16378-3)
+
+### Continuous-Time Dynamics and Causality
+
+- **Multivariate OU estimation.** Fasen, V. (2013). Statistical Estimation of
+  Multivariate Ornstein-Uhlenbeck Processes and Applications to Co-integration.
+  *Journal of Econometrics*, 172(2), 325-337.
+  [doi](https://doi.org/10.1016/j.jeconom.2012.08.019)
+
+- **Bayesian OU inference.** Singh, R., Ghosh, D., & Adhikari, R. (2018). Fast
+  Bayesian Inference of the Multivariate Ornstein-Uhlenbeck Process. *Physical
+  Review E*, 98, 012136.
+  [arXiv](https://arxiv.org/abs/1706.04961)
+
+- **Continuous-time Granger causality.** Wahl, B., Feudel, U., Hlinka, J., Wachter,
+  M., Peinke, J., & Freund, J. A. (2016). Granger-Causality Maps of Diffusion
+  Processes. *Physical Review E*, 93, 022213.
+  [doi](https://doi.org/10.1103/PhysRevE.93.022213)
+
+### Sparse High-Dimensional Time Series
+
+- **Sparse VAR.** Basu, S. & Michailidis, G. (2015). Regularized Estimation in
+  Sparse High-Dimensional Time Series Models. *Annals of Statistics*, 43(4),
+  1535-1567.
+  [doi](https://doi.org/10.1214/15-AOS1315)
+
+- **Network Granger causality.** Basu, S., Shojaie, A., & Michailidis, G. (2015).
+  Network Granger Causality with Inherent Grouping Structure. *Journal of Machine
+  Learning Research*, 16(13), 417-453.
+  [paper](https://jmlr.org/papers/v16/basu15a.html)
+
+### Bayesian Sparsity Priors
+
+- **Horseshoe prior.** Carvalho, C. M., Polson, N. G., & Scott, J. G. (2010). The
+  Horseshoe Estimator for Sparse Signals. *Biometrika*, 97(2), 465-480.
+  [doi](https://doi.org/10.1093/biomet/asq017)
+
+- **Regularized horseshoe.** Piironen, J. & Vehtari, A. (2017). Sparsity
+  Information and Regularization in the Horseshoe and Other Shrinkage Priors.
+  *Electronic Journal of Statistics*, 11(2), 5018-5051.
+  [doi](https://doi.org/10.1214/17-EJS1337SI)
+
+### Compositional Data Analysis
+
+- **ILR transform.** Egozcue, J. J., Pawlowsky-Glahn, V., Mateu-Figueras, G., &
+  Barcelo-Vidal, C. (2003). Isometric Logratio Transformations for Compositional
+  Data Analysis. *Mathematical Geology*, 35(3), 279-300.
+  [doi](https://doi.org/10.1023/A:1023818214614)

@@ -127,6 +127,58 @@ This separation is both practical and principled:
 - **The stages communicate through a clean interface:** per-visit topic proportion
   vectors $\theta_d$.
 
+### Related Work
+
+The components of this framework each have precedent, but the combination —
+nonparametric topic discovery on diagnosis codes with sparse continuous-time dynamics
+on individual patient trajectories — addresses a gap in the existing literature.
+
+**Topic models for clinical data.** LDA has been applied directly to diagnosis codes
+to discover disease groupings (Li et al., 2014), and to ICU clinical notes to extract
+latent features predictive of mortality (Ghassemi et al., 2014). UPhenome (Pivovarov
+et al., 2015) extended this to jointly model heterogeneous EHR data types (notes,
+medications, labs, codes) under shared phenotypes. MixEHR (Li et al., 2020) further
+refined multi-view clinical topic modeling with data-type-specific distributions.
+These approaches demonstrate that topic models can discover clinically meaningful
+phenotypes from EHR data, but all use a fixed number of topics and operate without
+temporal dynamics.
+
+**Nonparametric clinical topic models.** HDP-family models have been applied to
+diagnosis codes (e.g., the word-distance-dependent CRF of Chen et al., 2016), removing
+the need to pre-specify the number of phenotypes. However, these remain static models
+with no temporal component.
+
+**Temporal topic models in clinical settings.** The Dynamic Topic Model (Blei &
+Lafferty, 2006) captures corpus-level topic drift over time, and has been compared
+with other temporal approaches (NMF, BERTopic) on clinical notes (Meaney et al.,
+2022). However, these model how *topics themselves* change over time at the population
+level — not how individual patients move through a fixed set of topics. This is a
+fundamental distinction: corpus-level topic evolution is about changing medical
+language or practice patterns, while patient-level dynamics are about disease
+progression and treatment response.
+
+**Individual clinical trajectory modeling.** Schulam & Saria (2015) model
+individualized disease trajectories using hierarchical Gaussian processes on
+continuous biomarkers (e.g., lung function in scleroderma). Ranganath et al. (2016)
+use deep generative models aligned by failure time for survival analysis. These
+approaches model individual dynamics but on continuous measurements, not on discrete
+diagnosis-code-derived topic proportions.
+
+**OU processes in clinical/biomedical settings.** Tran et al. (2021) use latent OU
+models for longitudinal categorical clinical data (ALS progression), demonstrating
+that OU dynamics can capture oscillatory patterns via complex eigenvalues. Hughes et
+al. (2017) combine OU processes with random effects for serial biomarker correlation
+(CD4 counts in HIV). Gaiffas & Matulewicz (2019) establish the theoretical
+foundations for $L_1$-penalized estimation of high-dimensional OU drift matrices — the
+direct methodological basis for the sparse estimation in our Stage 2.
+
+**The gap.** Static clinical topic models discover *what* phenotypes exist but not
+*how* patients move through them. Temporal topic models capture population-level topic
+drift but not individual trajectories. Individual trajectory models operate on
+continuous biomarkers, not on phenotype proportions derived from discrete codes. Our
+framework bridges these by discovering phenotypes nonparametrically (HDP) and then
+modeling per-patient phenotype dynamics with sparse continuous-time interactions (OU).
+
 ---
 
 ## Model Architecture
@@ -754,6 +806,42 @@ at the cost of a larger and more heterogeneous feature space for the HDP.
   Communications*, 11, 2536.
   [doi](https://doi.org/10.1038/s41467-020-16378-3)
 
+- **UPhenome.** Pivovarov, R., Perotte, A. J., Grave, E., Angiolillo, J., Wiggins,
+  C. H., & Elhadad, N. (2015). Learning Probabilistic Phenotypes from Heterogeneous
+  EHR Data. *Journal of Biomedical Informatics*, 58, 156-165.
+  [doi](https://doi.org/10.1016/j.jbi.2015.10.001)
+
+- **LDA for ICU mortality.** Ghassemi, M., Naumann, T., Doshi-Velez, F., Brimmer,
+  N., Joshi, R., Rumshisky, A., & Szolovits, P. (2014). Unfolding Physiological
+  State: Mortality Modelling in Intensive Care Units. *KDD 2014*.
+  [doi](https://doi.org/10.1145/2623330.2623742)
+
+- **LDA on diagnosis codes.** Li, D. C., Thermeau, T., Chute, C., & Liu, H. (2014).
+  Discovering Associations Among Diagnosis Groups Using Topic Modeling. *AMIA Joint
+  Summits on Translational Science Proceedings*, 2014, 43-49.
+  [PMC](https://pmc.ncbi.nlm.nih.gov/articles/PMC4419765/)
+
+- **Anchor-based phenotyping.** Halpern, Y., Horng, S., Choi, Y., & Sontag, D.
+  (2016). Electronic Medical Record Phenotyping Using the Anchor and Learn Framework.
+  *JAMIA*, 23(4), 731-740.
+  [doi](https://doi.org/10.1093/jamia/ocw011)
+
+- **Temporal topic comparison.** Meaney, C., Escobar, M., Stukel, T. A., Austin,
+  P. C., & Jaakkimainen, L. (2022). Comparison of Methods for Estimating Temporal
+  Topic Models From Primary Care Clinical Text Data. *JMIR Medical Informatics*.
+  [doi](https://doi.org/10.2196/40102)
+
+### Individual Clinical Trajectory Modeling
+
+- **Individualized trajectories.** Schulam, P. & Saria, S. (2015). A Framework for
+  Individualizing Predictions of Disease Trajectories by Exploiting Multi-Resolution
+  Structure. *NeurIPS 2015*.
+  [paper](https://proceedings.neurips.cc/paper/2015/hash/285e19f20beded7d215102b49d5c09a0-Abstract.html)
+
+- **Deep survival analysis.** Ranganath, R., Perotte, A., Elhadad, N., & Blei, D.
+  (2016). Deep Survival Analysis. *MLHC 2016*.
+  [arXiv](https://arxiv.org/abs/1608.02158)
+
 ### Continuous-Time Dynamics and Causality
 
 - **Multivariate OU estimation.** Fasen, V. (2013). Statistical Estimation of
@@ -765,6 +853,16 @@ at the cost of a larger and more heterogeneous feature space for the HDP.
   Bayesian Inference of the Multivariate Ornstein-Uhlenbeck Process. *Physical
   Review E*, 98, 012136.
   [arXiv](https://arxiv.org/abs/1706.04961)
+
+- **Latent OU for clinical data.** Tran, T. D., Lesaffre, E., Verbeke, G., &
+  Duyck, J. (2021). Latent Ornstein-Uhlenbeck Models for Bayesian Analysis of
+  Multivariate Longitudinal Categorical Responses. *Biometrics*, 77(3), 689-701.
+  [doi](https://doi.org/10.1111/biom.13292)
+
+- **Sparse high-dimensional OU.** Gaiffas, S. & Matulewicz, G. (2019). Sparse
+  Inference of the Drift of a High-Dimensional Ornstein-Uhlenbeck Process. *Journal
+  of Multivariate Analysis*, 169, 1-20.
+  [arXiv](https://arxiv.org/abs/1707.03010)
 
 - **Continuous-time Granger causality.** Wahl, B., Feudel, U., Hlinka, J., Wachter,
   M., Peinke, J., & Freund, J. A. (2016). Granger-Causality Maps of Diffusion

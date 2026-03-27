@@ -464,11 +464,11 @@ flowchart TD
     Broadcast --> Worker2
     Grad1 --> Agg["treeAggregate:<br/>sum sparse gradients"]
     Grad2 --> Agg
-    Agg --> Update["Driver: L1-penalized<br/>update of A edges"]
+    Agg --> Update["Driver: variational<br/>update of A edges"]
 ```
 
 **Per-patient likelihood computation.** For a patient with visits at times
-$t_1, t_2, \ldots, t_n$, the log-likelihood is:
+$t_1, t_2, \ldots, t_n$, the log-likelihood contribution is:
 
 $$\ell = \sum_{i=1}^{n-1} \log \mathcal{N}\!\left(\alpha_{t_{i+1}} \;\middle|\; \mu + e^{A_{\text{local}} \cdot \Delta t_i}(\alpha_{t_i} - \mu),\; \Gamma_{\text{local}}(\Delta t_i)\right)$$
 
@@ -476,41 +476,43 @@ where $A_{\text{local}}$ is the small dense subblock for this patient's active
 topics, and $\Delta t_i = t_{i+1} - t_i$. The matrix exponential of a $15 \times 15$
 matrix is trivial — NumPy computes it in microseconds.
 
-**Estimation algorithm:**
+**Estimation via variational Bayes.** We use variational inference with a
+sparsity-inducing prior (horseshoe or spike-and-slab) on entries of $A$. This
+follows the same distributed pattern as the HDP stage — both stages of the pipeline
+use [variational Bayesian methods](https://en.wikipedia.org/wiki/Variational_Bayesian_methods),
+giving a coherent framework where uncertainty propagates naturally. The
+[spark-vi framework](SPARK_VI_FRAMEWORK.md) generalizes this shared computational
+pattern.
 
-For each iteration of the sparse OU estimator:
+For each iteration:
 
-1. **Broadcast** the current edge list and $\mu$ (small — a few thousand floats).
+1. **Broadcast** the current variational parameters for $A$, $\mu$, and $\Sigma$
+   (small — a few thousand floats).
 2. **mapPartitions** over patients: for each patient, extract active topic subset,
-   build dense subblock, compute log-likelihood and gradient contributions.
+   build dense subblock, compute local ELBO contributions and natural gradient
+   statistics.
 3. **treeAggregate** the sparse gradient dictionaries (sum matching keys).
-4. **Driver**: proximal gradient step with $L_1$ penalty on $A$ — entries that
-   shrink below threshold are dropped from the edge list.
+4. **Driver**: variational update of the global posterior over $A$, $\mu$, $\Sigma$.
+   Entries of $A$ whose posterior concentrates near zero are pruned from the edge
+   list.
 
-**Variational Bayes variant (recommended).** The estimation algorithm above describes
-penalized MLE — point estimates of $A$, $\mu$, and $\Sigma$ with $L_1$ sparsity.
-A variational Bayes formulation is preferable for several reasons:
+**Why variational Bayes over penalized MLE.** An alternative approach is
+$L_1$-penalized maximum likelihood (Gaiffas & Matulewicz, 2019), which produces
+point estimates with hard sparsity thresholding. VB is preferable here because:
 
 - **Posterior uncertainty on edges.** Rather than a binary "this edge exists / doesn't
-  exist" from L1 thresholding, the posterior gives calibrated confidence: "95%
+  exist" from $L_1$ thresholding, the posterior gives calibrated confidence: "95%
   credible interval for $A_{ij}$ excludes zero" vs. "wide posterior centered near
   zero." This is more natural for exploratory causal analysis.
-- **Smoother sparsity.** A horseshoe or spike-and-slab prior on entries of $A$
-  provides continuous shrinkage instead of the hard threshold of $L_1$, improving
-  numerical stability — edges don't pop in and out discontinuously during
+- **Smoother sparsity.** Continuous shrinkage priors avoid the numerical instability
+  of hard thresholds — edges don't pop in and out discontinuously during
   optimization.
-- **Consistency with Stage 1.** The HDP stage already uses online variational Bayes
-  (the same family of inference that Spark MLlib uses for its built-in LDA). Making
-  both stages variational Bayesian gives a coherent framework where uncertainty
-  propagates naturally.
-- **Same computational structure.** Each iteration of variational optimization
-  evaluates the same per-patient Gaussian likelihood with the same sparse subblock
-  structure. The cost per iteration is essentially identical to MLE; the variational
-  objective just adds an entropy/KL term computed on the driver. Total wall time
-  increases modestly (more iterations to converge) but parallelism is unchanged.
 - **Regularization of rare interactions.** With K=300 topics, many topic pairs have
   limited data. The prior regularizes these naturally, producing stable estimates
   where MLE might be erratic.
+- **Same computational structure.** The cost per iteration is essentially identical
+  to MLE; the variational objective just adds an entropy/KL term computed on the
+  driver. Parallelism is unchanged.
 
 ### Scaling Analysis
 

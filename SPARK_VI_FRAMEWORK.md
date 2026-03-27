@@ -714,6 +714,15 @@ like the HDP with large per-site datasets, even a few rounds should suffice.
 Federated nonparametric topic modeling for multi-site clinical data would be a
 meaningful research contribution in its own right.
 
+## Macrovisit pre-processing
+
+A prerequisite for meaningful federation is that the document unit is comparable
+across sites. Clinical encounter definitions vary significantly across institutions
+(see the N3C macrovisit work by Pfaff et al., 2023, which merges heterogeneous
+micro-encounters into standardized composite visits). A federated deployment would
+need either a shared macrovisit construction step at each site, or sufficient
+robustness to document-level variation — an open question worth investigating.
+
 ---
 
 ## References

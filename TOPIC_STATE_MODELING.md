@@ -1,5 +1,44 @@
 # Topic-State Modeling: Unsupervised Clinical Phenotype Discovery with Continuous-Time Causal Dynamics
 
+## Table of Contents
+
+- [Executive Summary](#executive-summary)
+- [Background & Rationale](#background--rationale)
+  - [Topic Models for Clinical Data](#topic-models-for-clinical-data)
+  - [Why Existing Dynamic Topic Models Don't Fit](#why-existing-dynamic-topic-models-dont-fit)
+  - [The Key Insight: Decouple Discovery from Dynamics](#the-key-insight-decouple-discovery-from-dynamics)
+  - [Related Work](#related-work)
+- [Model Architecture](#model-architecture)
+  - [Stage 1: Online HDP for Clinical Phenotype Discovery](#stage-1-online-hdp-for-clinical-phenotype-discovery)
+  - [Stage 2: Sparse Multivariate OU for Patient Dynamics](#stage-2-sparse-multivariate-ou-for-patient-dynamics)
+  - [How the Stages Connect](#how-the-stages-connect)
+- [Computational Design](#computational-design)
+  - [HDP: Distributed Variational Inference](#hdp-distributed-variational-inference)
+  - [OU: Distributed Sparse Estimation](#ou-distributed-sparse-estimation)
+  - [Scaling Analysis](#scaling-analysis)
+  - [Technology Stack](#technology-stack)
+- [Interpretable Outputs](#interpretable-outputs)
+  - [The A Matrix as a Causal Graph](#the-a-matrix-as-a-causal-graph)
+  - [Eigenanalysis: Clinical Modes and Timescales](#eigenanalysis-clinical-modes-and-timescales)
+  - [Baseline Profile μ](#baseline-profile-μ)
+  - [Generative and Predictive Capacity](#generative-and-predictive-capacity)
+- [Key Design Decisions & Alternatives Considered](#key-design-decisions--alternatives-considered)
+  - [Why HDP over LDA](#why-hdp-over-lda)
+  - [Why OU over Discrete Multi-State Models](#why-ou-over-discrete-multi-state-models)
+  - [Why Two-Stage over Joint Estimation](#why-two-stage-over-joint-estimation)
+  - [Why Wavelet Regression Was Rejected](#why-wavelet-regression-was-rejected)
+  - [Why We Moved Past DTM Entirely](#why-we-moved-past-dtm-entirely)
+- [Open Questions & Future Work](#open-questions--future-work)
+  - [Covariate-Dependent Dynamics](#covariate-dependent-dynamics)
+  - [OU Noise Model Absorbing Topic Estimation Uncertainty](#ou-noise-model-absorbing-topic-estimation-uncertainty)
+  - [Handling Rare Phenotypes in OU Estimation](#handling-rare-phenotypes-in-ou-estimation)
+  - [Periodic and Seasonal Extensions](#periodic-and-seasonal-extensions)
+  - [Joint Estimation](#joint-estimation)
+  - [Causal Interpretation Caveats](#causal-interpretation-caveats)
+- [References](#references)
+
+---
+
 ## Executive Summary
 
 Understanding how patients move through clinical states over time is fundamental to

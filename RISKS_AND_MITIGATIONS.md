@@ -370,3 +370,30 @@ package layout, no compiled extensions, no build-time code generation).
 **Overall:** The critical path runs through the framework and HDP, both of which are
 high-confidence. Stage 2 complexity is elective — the milestones can be met with
 simpler approaches, preserving ambitious dynamics modeling as optional research upside.
+
+
+
+## Novelty and Prior Art Risk
+
+### Reviewer comparison to existing distributed VI frameworks
+
+**Risk:** A reviewer familiar with the AMIDST toolbox (Masegosa et al., 2019) or
+general-purpose PPLs (Pyro, NumPyro) could argue that spark-vi duplicates existing
+work. AMIDST implemented the same broadcast→aggregate→update pattern on Spark/Flink
+for conjugate exponential family models (GMMs, HMMs, Kalman filters, LDA) and
+published in *Knowledge-Based Systems*.
+
+**Impact:** Medium. Could weaken the contribution narrative if the framework is
+presented as the primary novelty.
+
+**Mitigation:** AMIDST has been dormant since 2018 and its creator has moved to other
+research (learning theory, variational structure learning). More substantively, AMIDST
+cannot host the models in this pipeline: it lacks nonparametric models (HDP) and
+cannot accommodate non-VI models (sparse OU via penalized MLE) — its architecture is
+restricted to directed graphical models with VMP-compatible distributions. The
+framework should be positioned as *enabling* the clinical modeling pipeline, not as the
+primary contribution. The scientific contribution is the two-stage pipeline (HDP → OU)
+and its clinical application; the framework is the vehicle. See the "Prior Art &
+Positioning" section in SPARK_VI_FRAMEWORK.md for a detailed comparison.
+
+---

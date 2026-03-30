@@ -214,12 +214,34 @@ al. (2017) combine OU processes with random effects for serial biomarker correla
 foundations for $L_1$-penalized estimation of high-dimensional OU drift matrices — the
 direct methodological basis for the sparse estimation in our Stage 2.
 
+**Distributed variational inference frameworks.** The AMIDST toolbox (Masegosa et al.,
+2019) is the closest prior art for a general-purpose distributed VI framework. Built
+in Java with Apache Flink/Spark backends, AMIDST implements Variational Message Passing
+for conjugate exponential family models (GMMs, HMMs, Kalman filters, factor analysis,
+LDA) and demonstrated billion-parameter inference on 16-node clusters. However, AMIDST
+has been unmaintained since 2018, supports only ~6 hardcoded distribution types (no
+user-defined exponential families), and lacks nonparametric models (HDP, Dirichlet
+processes) — its LDA requires fixed K. Its creator (Masegosa) has since moved to
+learning theory and variational structure learning (Masegosa & Gómez-Olmedo, 2025).
+A successor project, InferPy (Python/TensorFlow Probability), is also dormant.
+In the single-machine space, Akbayrak et al. (2022) embed stochastic VI and
+Conjugate-Computation VI into ForneyLab, a Julia message-passing framework — extending
+automated inference beyond deterministic VMP but without distributed computation.
+General-purpose probabilistic programming frameworks (Pyro, NumPyro, TFP) support SVI
+but target GPU-centric workflows rather than Spark-cluster-over-partitioned-data
+settings. No active project provides a reusable distributed VI framework on Spark for
+arbitrary models with the broadcast→aggregate→update pattern.
+
 **The gap.** Static clinical topic models discover *what* phenotypes exist but not
 *how* patients move through them. Temporal topic models capture population-level topic
 drift but not individual trajectories. Individual trajectory models operate on
-continuous biomarkers, not on phenotype proportions derived from discrete codes. Our
+continuous biomarkers, not on phenotype proportions derived from discrete codes.
+Existing distributed VI frameworks either lack nonparametric models and flexible model
+definition (AMIDST) or lack distributed computation (ForneyLab, Pyro). Our
 framework bridges these by discovering phenotypes nonparametrically (HDP) and then
-modeling per-patient phenotype dynamics with sparse continuous-time interactions (OU).
+modeling per-patient phenotype dynamics with sparse continuous-time interactions (OU),
+within a reusable distributed framework flexible enough to host both variational
+inference and penalized MLE models.
 
 ---
 
@@ -999,6 +1021,29 @@ at the cost of a larger and more heterogeneous feature space for the HDP.
   Information and Regularization in the Horseshoe and Other Shrinkage Priors.
   *Electronic Journal of Statistics*, 11(2), 5018-5051.
   [doi](https://doi.org/10.1214/17-EJS1337SI)
+
+### Distributed Variational Inference Frameworks
+
+- **AMIDST.** Masegosa, A. R., Martinez, A. M., Ramos-López, D., Langseth, H.,
+  Nielsen, T. D., & Salmerón, A. (2019). AMIDST: A Java Toolbox for Scalable
+  Probabilistic Machine Learning. *Knowledge-Based Systems*, 163, 595-597.
+  [doi](https://doi.org/10.1016/j.knosys.2018.09.030)
+
+- **Distributed VI on clusters.** Masegosa, A. R., Martinez, A. M., Langseth, H.,
+  Nielsen, T. D., Salmerón, A., Ramos-López, D., & Madsen, A. L. (2017). Scaling up
+  Bayesian Variational Inference Using Distributed Computing Clusters. *International
+  Journal of Approximate Reasoning*, 88, 91-108.
+  [doi](https://doi.org/10.1016/j.ijar.2017.05.010)
+
+- **Stochastic VMP in ForneyLab.** Akbayrak, S., Şenöz, İ., Sarı, A., & de Vries, B.
+  (2022). Probabilistic Programming with Stochastic Variational Message Passing.
+  *International Journal of Approximate Reasoning*, 148, 235-252.
+  [doi](https://doi.org/10.1016/j.ijar.2022.06.006)
+
+- **Variational structure learning.** Masegosa, A. R. & Gómez-Olmedo, M. (2025).
+  Toward Variational Structural Learning of Bayesian Networks. *IEEE Access*, 13,
+  26130-26141.
+  [doi](https://doi.org/10.1109/ACCESS.2025.3540671)
 
 ### Compositional Data Analysis
 

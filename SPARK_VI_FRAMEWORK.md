@@ -724,8 +724,62 @@ robustness to document-level variation — an open question worth investigating.
 
 ---
 
+## Prior Art & Positioning
+
+The distributed VI pattern (broadcast globals → local updates → aggregate sufficient
+statistics → global update) is not novel to this framework. What spark-vi contributes
+is a **reusable PySpark implementation** of this pattern with a minimal, flexible model
+contract — not the pattern itself.
+
+### Existing frameworks
+
+**AMIDST** (Masegosa et al., 2019) is the most direct prior art: a Java framework for
+scalable VI on Bayesian networks with Flink/Spark backends. AMIDST demonstrated the
+pattern at scale (billion-parameter models on 16-node clusters) for GMMs, HMMs, Kalman
+filters, factor analysis, and LDA. Key differences from spark-vi:
+
+| Dimension | AMIDST | spark-vi |
+|---|---|---|
+| Model definition | Compose from ~6 built-in distribution types | Arbitrary code in 3-method contract |
+| Nonparametric models (HDP) | Not supported | Core pre-built model |
+| Non-VI models (penalized MLE) | Not supported | Supported (OU estimator) |
+| Maintenance | Dormant since 2018; creator moved to other research | Active |
+| Language/ecosystem | Java | Python/PySpark/NumPy |
+
+AMIDST's restriction to directed graphical models with VMP-compatible distributions is
+the fundamental architectural difference. spark-vi's duck-typed contract allows any
+model where local computation produces additive sufficient statistics — including
+models like the sparse OU estimator that use penalized maximum likelihood rather than
+variational inference. AMIDST cannot host such models without core modifications.
+
+**Pyro/NumPyro** support SVI and can distribute via Horovod or JAX `pmap`, but target
+GPU-centric workflows. They assume data fits in memory (or is handled by PyTorch
+DataLoaders), not that data lives in a distributed data lake processed as Spark
+partitions. For organizations where data is already in Spark (e.g., clinical data
+warehouses on Databricks/Synapse), requiring a separate GPU pipeline is a significant
+adoption barrier.
+
+**ForneyLab** (Akbayrak et al., 2022) embeds stochastic VI into an automated
+message-passing framework in Julia — more automated than spark-vi (model authors
+specify factor graphs, not update equations) but single-machine only.
+
+**Stan, PyMC, Turing.jl** implement ADVI (black-box VI without natural gradients) and
+are single-machine. They do not exploit conjugate structure or distribute computation.
+
+### Positioning
+
+The strongest case for spark-vi is not "a better AMIDST" but rather: the clinical
+modeling pipeline (HDP → OU) requires a framework flexible enough to host both
+nonparametric variational inference and penalized MLE for continuous-time processes,
+and no existing framework — active or dormant — accommodates both.
+
+---
+
 ## References
 
+- Akbayrak, S., Şenöz, İ., Sarı, A., & de Vries, B. (2022). Probabilistic Programming
+  with Stochastic Variational Message Passing. *International Journal of Approximate
+  Reasoning*, 148, 235-252.
 - Blei, D. M., & Lafferty, J. D. (2006). Dynamic Topic Models. *ICML*.
 - Gaiffas, S., & Matulewicz, G. (2019). Sparse inference of the drift of a
   high-dimensional Ornstein-Uhlenbeck process. *Journal of Multivariate Analysis*, 169.
@@ -733,6 +787,12 @@ robustness to document-level variation — an open question worth investigating.
   Dirichlet Allocation. *NeurIPS*.
 - Hoffman, M. D., Blei, D. M., Wang, C., & Paisley, J. (2013). Stochastic Variational
   Inference. *JMLR*, 14.
+- Masegosa, A. R., et al. (2019). AMIDST: A Java Toolbox for Scalable Probabilistic
+  Machine Learning. *Knowledge-Based Systems*, 163, 595-597.
+- Masegosa, A. R., et al. (2017). Scaling up Bayesian Variational Inference Using
+  Distributed Computing Clusters. *International Journal of Approximate Reasoning*, 88.
+- Masegosa, A. R. & Gómez-Olmedo, M. (2025). Toward Variational Structural Learning
+  of Bayesian Networks. *IEEE Access*, 13, 26130-26141.
 - Teh, Y. W., Jordan, M. I., Beal, M. J., & Blei, D. M. (2006). Hierarchical
   Dirichlet Processes. *JASA*, 101(476).
 - Wang, C., Paisley, J., & Blei, D. M. (2011). Online Variational Inference for the

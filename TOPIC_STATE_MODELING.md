@@ -470,6 +470,50 @@ Our port keeps the expensive per-document computation on workers, following the 
 pattern that Spark MLlib's own `OnlineLDAOptimizer` uses: broadcast model, distributed
 E-step, tree-aggregated statistics.
 
+**Implementation requirement: standalone inference entry point.** The per-document
+E-step (step 2 above) must be exposed as a first-class callable of the form
+`infer(documents_rdd, frozen_globals) -> per_doc_posteriors_rdd`, not just as an
+internal step of the training loop. Concretely, given frozen $E[\log \beta]$ and
+corpus-level `var_sticks`, it should run the same $\phi$ / $\gamma$ / `var_phi`
+coordinate-ascent per document and return the per-document variational posterior
+(the $\theta_d$ that Stage 2 consumes), with no treeAggregate and no driver M-step.
+This is the standard "apply a trained model to new data" primitive that every online
+LDA/HDP implementation exposes (Gensim's `HdpModel.inference()`, Wang's original
+`online-hdp`, etc.), and it is required for:
+
+- **Held-out evaluation** during training (per-document perplexity / ELBO on a
+  held-out split with frozen globals).
+- **The FHIR-compatible inference workflow** targeted by the 48-month deliverable
+  ([MILESTONES.md](MILESTONES.md)) — predicting on a new patient at serving time
+  *is* frozen-globals inference.
+- **Any Stage-1 enhancement that decouples the training document granularity from
+  the inference document granularity** (see next paragraph).
+
+This is not extra work — the function already exists inside the training loop; it
+just needs a clean name, signature, and a code path that skips the reduce and the
+M-step. Getting the API shape right during the initial port is much cheaper than
+retrofitting it later, and it falls out naturally from the spark-vi `local_update`
+/ `global_update` separation: frozen-globals inference is simply `local_update`
+called without a following `global_update`.
+
+**Likely early enhancement: patient-level training, visit-level inference.** Clinical
+visits are short documents (5-20 codes), which gives well-identified global
+phenotype definitions $\beta_k$ (they see all tokens in the corpus) but noisy
+per-visit topic proportions $\theta_d$ (each visit has too few tokens to pin down
+its mixture). The MVP uses visit-level documents throughout and lets the OU
+observation noise in Stage 2 absorb the per-visit estimation uncertainty — see
+[OU Noise Model Absorbing Topic Estimation Uncertainty](#ou-noise-model-absorbing-topic-estimation-uncertainty).
+An early enhancement, enabled directly by the standalone inference entry point
+above, is to train the HDP with **patient-level documents** (each patient's full
+code history concatenated) so that the per-patient variational posteriors are
+sharp, then run the frozen-globals inference pass on **visit-level documents** to
+produce the per-visit $\theta_d$ that Stage 2 actually needs. Global $\beta_k$
+benefits from dramatically longer effective documents, and Stage 2 still receives
+visit-resolution inputs. This is not required for the MVP — the visit-level
+training path is simpler and the two-stage architecture already tolerates noisy
+$\theta_d$ — but it is a probable early win once baseline results are available,
+and the API requirement above ensures the port does not foreclose it.
+
 ### OU: Distributed Sparse Estimation
 
 The OU estimation exploits two forms of sparsity:

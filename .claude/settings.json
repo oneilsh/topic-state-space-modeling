@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:dm13450.github.io)"
+    ]
+  }
+}

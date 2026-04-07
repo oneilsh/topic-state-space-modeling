@@ -841,6 +841,73 @@ statistically appropriate (don't claim causal relationships you can't support) b
 means the model may miss real interactions for uncommon conditions. Hierarchical or
 transfer learning approaches could help borrow strength across related phenotypes.
 
+### Tree-Structured HDP for Hierarchical Cohort Pooling
+
+The HDP as planned uses the standard two-level topic-model tree: a global DP $G_0$
+over phenotypes and one child DP $G_j$ per patient. The general HDP formulation of
+Teh et al. 2006 allows arbitrary-depth trees of DPs, where each interior node draws
+from its parent. A natural use case here is a three-level tree
+
+$$
+G_0 \;\to\; \{G_g\}_{g \in \text{groups}} \;\to\; \{G_{g,j}\}_{j \in \text{patients in } g}
+$$
+
+where "groups" are natural cohort structures: health system, site, disease cohort,
+birth-era, or geographic region. **The phenotype atoms remain shared globally**
+(every group and patient draws from the same $G_0$), but mixing proportions can
+differ by group, giving partial pooling without forcing a single global prior or
+fully separate models. This is exactly the setting where HDP's atom-sharing
+machinery earns its keep, and it's directly supported in the reference R package
+`nicolaroberts/hdp` via custom `ppindex`/`cpindex` tree specifications (used there
+for Gibbs sampling; the model is the same).
+
+**Why this is a genuinely novel contribution in the distributed setting.** Online
+stochastic VI for HDP as published (Wang, Paisley & Blei 2011, and the Gensim
+implementation) assumes the two-level tree. Extending stochastic VI to nested DPs
+requires a richer variational family (one stick-breaking factor per interior node)
+and per-level update equations that are not available off-the-shelf. There is, to
+our knowledge, no published at-scale distributed implementation of a nested online
+HDP. Given spark-vi's local/global decomposition, it is a natural vehicle for one.
+
+**Would distributed overhead dominate?** For shallow trees (3 levels), no — the
+added cost is small relative to the flat HDP baseline:
+
+- **Broadcast.** Interior-node variational params are $O(\text{num\_groups} \times K)$
+  stick-breaking weights — e.g., 1000 groups × 300 topics $\approx$ 2.4MB, negligible
+  next to the $\sim$84MB topic-word broadcast that already dominates each iteration.
+- **Reduce.** Sufficient statistics still flow leaves → root, but as a tree-shaped
+  aggregation. Spark's `treeAggregate` is designed for exactly this pattern; one
+  reduce per mini-batch, same as flat HDP.
+- **Rounds.** A two-level interior tree does not require intra-mini-batch alternation
+  between levels — a single upward message pass suffices per stochastic step, so the
+  broadcast/reduce cadence is unchanged.
+- **Partitioning.** Co-locating subtrees on executors (partition by group) keeps
+  interior-node updates partition-local. Only the global topic-word reduce is
+  cross-partition, identical to the flat case.
+
+The real costs are statistical and derivational, not systems-level:
+
+- **Noisy interior-node updates.** Stochastic mini-batches touch only a handful of
+  groups per step, so each interior DP receives sparse, noisy sufficient statistics.
+  Robbins-Monro convergence still holds, but interior levels will need either larger
+  effective batch sizes, per-level learning rates, or variance-reduction tricks.
+- **Derivation.** Extending Wang/Paisley/Blei 2011 to the nested case is a real piece
+  of VI work — deriving the coordinate updates, bookkeeping for which groups were
+  touched in a mini-batch, and a convergence criterion that accounts for sparse
+  interior updates. This is a research contribution, not a config flag.
+- **Depth caveat.** At 4+ levels, sibling-normalization dependencies can force
+  inner iteration within a mini-batch, at which point the advertised "one broadcast,
+  one reduce per step" cadence breaks and overhead starts to grow. The three-level
+  case avoids this.
+
+**Suggested staging.** Ship the flat two-level HDP first. For most foreseeable
+cohort-structure questions, post-hoc analysis of per-patient mixing proportions
+grouped by cohort metadata captures the interesting signal at zero additional
+modeling cost. Move to an explicit three-level nested HDP only when that post-hoc
+analysis shows group-level differences large enough to justify the partial-pooling
+machinery — at which point the spark-vi framework is well-positioned to host what
+would be a novel distributed implementation.
+
 ### Nonlinear Drift and Multi-Attractor Dynamics
 
 The standard OU process has a linear restoring force: the drift $A(\mu - \alpha_t)$

@@ -44,9 +44,21 @@ distribution over the diagnosis vocabulary rather than a hard cluster assignment
 Because the approach is Bayesian, the model quantifies uncertainty at every level:
 which diagnoses characterize which phenotype, how strongly a given document
 reflects each phenotype, and how confident those estimates are given the available
-data. The per-document phenotype profiles then serve as rich, interpretable
+data. The per-document phenotype profiles serve as rich, interpretable
 features for downstream outcome characterization, simulation, and prediction
 tasks.
+
+**Interpretable patient embeddings as a first-class output.** The per-patient
+phenotype profiles are dense, low-dimensional vector representations of patients —
+*interpretable* patient embeddings, where each coordinate corresponds to a learned
+clinical phenotype with a clinical meaning rather than an opaque latent dimension.
+These embeddings are emitted in a form directly consumable by standard vector-search
+infrastructure (cosine similarity over the emitted vectors is principled by
+construction — see the [research design](TOPIC_STATE_MODELING.md) for details),
+enabling patient retrieval, cohort similarity search, and integration with any
+downstream ML pipeline that speaks the embedding vocabulary, while retaining the
+clinical interpretability and uncertainty quantification the Bayesian pipeline
+provides.
 
 ```mermaid
 graph LR

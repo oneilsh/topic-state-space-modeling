@@ -22,6 +22,7 @@
   - [Eigenanalysis: Clinical Modes and Timescales](#eigenanalysis-clinical-modes-and-timescales)
   - [Baseline Profile μ](#baseline-profile-μ)
   - [Generative and Predictive Capacity](#generative-and-predictive-capacity)
+  - [Patient Embeddings for Retrieval and Downstream ML](#patient-embeddings-for-retrieval-and-downstream-ml)
 - [Key Design Decisions & Alternatives Considered](#key-design-decisions--alternatives-considered)
   - [Why HDP over LDA](#why-hdp-over-lda)
   - [Why OU over Discrete Multi-State Models](#why-ou-over-discrete-multi-state-models)
@@ -93,6 +94,12 @@ graph LR
 - **Scalable.** Both stages distribute computation across Spark workers. The natural
   sparsity of clinical data (few active phenotypes per patient) keeps per-patient
   computation small even with hundreds of global phenotypes.
+- **Interpretable patient embeddings.** The pipeline produces dense, low-dimensional
+  per-patient vectors whose coordinates are learned clinical phenotypes (not opaque
+  latent dimensions), in a form directly consumable by standard vector-search
+  infrastructure via cosine similarity. Both a static per-patient embedding (from
+  Stage 1) and a continuous-time-indexed dynamic embedding trajectory (from Stage 2)
+  are available. See [Patient Embeddings for Retrieval and Downstream ML](#patient-embeddings-for-retrieval-and-downstream-ml).
 
 ---
 
@@ -758,6 +765,80 @@ realistic patient futures, enabling:
 - What-if analysis ("if we could suppress the infection phenotype, how does the renal
   trajectory change?")
 - Cohort simulation for study design and power analysis
+
+### Patient Embeddings for Retrieval and Downstream ML
+
+The pipeline produces *interpretable* patient embeddings as a first-class output,
+not as a rebadging of the topic proportions after the fact. Each layer of the
+model contributes an embedding at a different level of abstraction:
+
+- **Phenotype embeddings** ($\beta_k$): each learned phenotype is a sparse vector
+  over the diagnosis-code vocabulary, with each coordinate a real clinical code.
+  Pairwise similarities between $\beta_k$ rows give a principled measure of
+  phenotype relatedness ("which phenotypes share codes").
+- **Static patient embeddings** (derived from $\theta_d$): a dense $K$-dimensional
+  vector per patient (or per visit, depending on document granularity) where each
+  coordinate is the patient's loading on a learned phenotype.
+- **Dynamic patient embeddings** (the OU trajectory $\alpha_t$): a time-indexed
+  embedding that evolves continuously between visits under the learned dynamics of
+  $A$. This is a genuinely unusual output — most clinical embedding approaches
+  produce either static representations or discrete per-visit embeddings with no
+  between-visit semantics.
+- **Clinical-mode embeddings** (eigenvectors of $A$): directions in phenotype space
+  corresponding to coordinated dynamic processes, each with its own timescale
+  $\tau_i = -1/\text{Re}(\lambda_i)$. These can be used as a further
+  dimensionality reduction when similarity in *dynamic mode space* rather than
+  phenotype space is the target.
+
+**Principled cosine similarity, by construction.** The natural patient vector
+$\theta_d$ lives on the probability simplex $\Delta^{K-1}$, so Euclidean cosine
+similarity on raw $\theta_d$ is a widely used *convention* but is not canonical —
+it ignores the Fisher-information geometry of probability distributions and
+mishandles the zero boundary. The principled fix is to emit a **transformed**
+vector from which standard cosine is well-defined, so that downstream
+vector-search infrastructure (which universally assumes cosine/Euclidean
+geometry) gets correct semantics for free. Two transforms are relevant; both are
+$O(K)$ and both fall out of the variational posterior at no additional cost:
+
+- **Hellinger embedding**: $h_d = \sqrt{\theta_d}$ (elementwise square root).
+  Because $\sum_k (\sqrt{\theta_{d,k}})^2 = 1$, these vectors live on the
+  positive orthant of the unit sphere, and cosine similarity between $h_d$ and
+  $h_{d'}$ is exactly the Bhattacharyya coefficient
+  $\text{BC}(\theta_d, \theta_{d'}) = \sum_k \sqrt{\theta_{d,k}\theta_{d',k}}$ —
+  a well-known principled similarity on probability distributions that respects
+  the Fisher metric on the simplex. In practice this means: emit $\sqrt{\theta_d}$
+  as the embedding, run vanilla cosine search, and the similarity has a clean
+  information-geometric interpretation rather than an ad hoc one.
+
+- **Compositional (ILR) embedding**: $c_d = \text{ILR}(\theta_d)$, the isometric
+  log-ratio transform the Stage-2 OU process already uses as its state
+  representation. Euclidean (equivalently, cosine after centering) distance on
+  $c_d$ is the Aitchison distance on $\theta_d$ — the principled metric from
+  compositional data analysis — and is consistent with the geometry the OU
+  dynamics live in. Use this embedding when "which patients are nearby in the
+  same geometry the dynamics use" is the question.
+
+**Three vectors, three purposes.** The pipeline should emit all three per patient:
+raw $\theta_d$ for direct clinical inspection and interpretability (the
+phenotype-by-phenotype loadings remain the primary interpretable output);
+$\sqrt{\theta_d}$ as the default embedding for general vector-search and retrieval
+(Fisher-geometry-principled, cosine-compatible, minimal friction for downstream
+tools); and $\text{ILR}(\theta_d)$ as the embedding for dynamics-aware similarity
+and any workflow that needs to interoperate with the Stage-2 representation.
+
+**Optional: richer model-aware embeddings.** For use cases where two patients
+with similar $\theta_d$ need to be distinguished by *how* their evidence loads on
+the model (e.g., one uses the high-probability codes of a phenotype while another
+uses tail codes), a Fisher embedding
+$U(\theta_d) = \nabla_\theta \log p(\text{patient}_d \mid \theta)$ evaluated at
+the trained parameters gives a model-aware patient signature in the full
+parameter space. This is a natural byproduct of the E-step — the per-document
+gradient contribution is already computed during variational inference — and
+generalizes cosine-on-$\theta$ by accounting for all parameters jointly rather
+than just the document-level mixing proportions. A PCA or random projection
+brings it down to a manageable dimensionality for indexing. This is an
+enhancement rather than an MVP deliverable, but the API should be designed so
+that exposing it later is a matter of emitting an already-computed quantity.
 
 ---
 

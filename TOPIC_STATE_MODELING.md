@@ -979,6 +979,31 @@ recovery). The linear OU is likely adequate for the primary goal of discovering 
 interaction structure via $A$, but long-horizon prediction and trajectory simulation
 would benefit from nonlinear extensions.
 
+**Autoregressive HDP as a complementary trajectory generator.** A different angle on
+the same limitation: OU's mean-reversion is a poor prior for chronic or progressive
+conditions — a patient who has established a chronic phenotype should become *more*
+likely to re-express it, not revert to baseline. HDP's native generative process has
+the opposite dynamic (Pólya urn self-reinforcement: tokens attach to existing
+phenotypes proportional to how often that phenotype has already appeared), which is
+clinically more realistic for persistence but lacks any notion of elapsed time between
+visits. An interesting research direction is to make HDP itself continuous-time and
+use it as a trajectory generator alongside (or instead of) OU for long-horizon
+simulation of chronic conditions. The most tractable route is the
+**distance-dependent CRP** (Blei & Frazier 2011) with an exponential temporal kernel:
+each token attaches to a prior token with probability proportional to $e^{-\Delta t/\tau}$,
+so recent tokens pull harder than old ones, chronic vs. acute emerges from
+per-phenotype decay timescales $\tau_k$, and the non-exchangeability (which is the
+point) replaces the clock-free CRP with a model where elapsed time genuinely matters.
+More ambitious alternatives — marked Hawkes processes with an HDP base measure, or
+Dependent Dirichlet Processes $\{G_j(t)\}_{t \geq 0}$ with smooth temporal dependence
+(MacEachern 1999; Griffin & Steel 2006) — are more formally principled but have
+substantially harder distributed inference. None of this is MVP work: the two-stage
+OU pipeline is the primary deliverable. But it is worth investigating in parallel
+with the nonlinear-drift extensions above, since the two approaches address the same
+realism gap from opposite ends (adding nonlinearity to a reversionary process vs.
+adding continuous time to a self-reinforcing one), and comparing them empirically on
+chronic-disease cohorts would be informative in its own right.
+
 ### Periodic and Seasonal Extensions
 
 While the OU process captures timescales through eigenvalues of $A$, it does not

@@ -1004,6 +1004,29 @@ realism gap from opposite ends (adding nonlinearity to a reversionary process vs
 adding continuous time to a self-reinforcing one), and comparing them empirically on
 chronic-disease cohorts would be informative in its own right.
 
+Any such comparison should be conducted on the common currency of observable codes
+rather than on the models' internal representations. Three tests together cover the
+relevant ground: **next-visit code prediction** (held-out log-likelihood and
+calibration — the cheapest apples-to-apples test), a **chronic-persistence test**
+(condition each model on the first appearance of a well-defined chronic phenotype
+in a matched cohort, simulate forward, compare persistence curves at 1y/2y/5y
+against real outcomes — the test that directly targets OU's mean-reversion
+limitation), and an **acute-recovery test** on short-course conditions to guard
+against a self-reinforcing model that simply fails to forget. All metrics must be
+**stratified by phenotype category** (acute / episodic / chronic-stable /
+chronic-progressive), since the whole theoretical argument is that the two model
+families should differ on *which phenotypes* they handle well; aggregate numbers
+would average away the interesting signal. A small-cohort viability check
+(e.g., 10k patients with T2DM, single-machine Gibbs via `nicolaroberts/hdp`) should
+precede any distributed implementation work: if dd-CRP-HDP does not clearly beat
+OU-linear on the persistence test at that scale, the theoretical argument has not
+materialized and the distributed investment is not warranted. Finally, the
+comparison should not be framed as winner-take-all — OU carries interventional
+semantics via the $A$ matrix that a purely generative autoregressive HDP does not,
+so the relevant question is which model should be used for which downstream task
+(causal / interventional queries vs. long-horizon trajectory simulation), not which
+one replaces the other.
+
 ### Periodic and Seasonal Extensions
 
 While the OU process captures timescales through eigenvalues of $A$, it does not

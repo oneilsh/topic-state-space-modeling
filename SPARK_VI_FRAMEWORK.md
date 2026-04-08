@@ -722,9 +722,50 @@ micro-encounters into standardized composite visits). A federated deployment wou
 need either a shared macrovisit construction step at each site, or sufficient
 robustness to document-level variation — an open question worth investigating.
 
+### Phenotype-Profile-Driven Capabilities
+
+Several capabilities become possible once interpretable per-patient phenotype
+profiles are available as a first-class output. These are noted here as
+forward-looking directions for the framework and the models built on it.
+
+- **Phenotype-based patient similarity.** Per-patient phenotype profiles
+  are dense, interpretable vector representations and admit principled
+  similarity comparisons (cosine on the appropriate transform of the
+  profile is well-defined; see [TOPIC_STATE_MODELING.md](TOPIC_STATE_MODELING.md)).
+  Privacy-preserving variants — federated nearest-neighbor protocols,
+  homomorphic encryption applied to similarity computation, and
+  differentially-private profile release — are all compatible with the
+  profile representation. Phenotype profiles are more
+  protective against identity disclosure than raw clinical records but
+  can still convey sensitive attribute information.
+
+- **Trajectory simulation.** Coupling phenotype profiles with a dynamic
+  model (such as the OU stage discussed in
+  [TOPIC_STATE_MODELING.md](TOPIC_STATE_MODELING.md)) enables
+  posterior-predictive simulation of plausible patient trajectories over
+  time, supporting aggregate risk exploration and what-if analysis at the
+  individual-patient level.
+
+- **Phenotype-conditioned outcome modeling.** Once phenotype profiles are
+  available, they form a natural feature substrate for downstream outcome
+  models, with the interpretability and uncertainty quantification of the
+  phenotyping stage carrying over to the outcome stage.
+
+- **Structured summaries for clinical review.** An interpretable phenotype
+  profile is a compact, clinically-readable summary of a patient's history
+  that can support the review of complex multimorbid records.
+
+- **Cross-references to technical extensions.** Several longer-horizon
+  technical directions are captured in
+  [TOPIC_STATE_MODELING.md](TOPIC_STATE_MODELING.md) under Open Questions
+  & Future Work, including distance-dependent / autoregressive HDP for
+  continuous-time topic dynamics, nested HDP for hierarchical cohort
+  pooling, Fisher embeddings as model-aware patient signatures, and OU
+  dynamics with nonlinear drift.
+
 ---
 
-## Prior Art & Positioning
+## Prior Art
 
 The distributed VI pattern (broadcast globals → local updates → aggregate sufficient
 statistics → global update) is not novel to this framework. What spark-vi contributes

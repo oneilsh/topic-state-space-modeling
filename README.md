@@ -1,13 +1,13 @@
 # CharmPheno: Interpretable Computational Phenotyping for Patient-Owned Health Insight
 
-**CharmPheno** is an interpretable **computational phenotyping** capability for unsupervised discovery and characterization of clinically meaningful patient phenotypes from structured patient health records. The approach uses a Bayesian nonparametric model whose output is interpretable (each phenotype is a clinically-readable distribution over diagnosis codes) and uncertainty-aware. The phenotype model is trained on large-scale clinical data via a distributed [Bayesian variational-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods) (VI) framework, and then applied per-patient using the trained population-level parameters and that patient's own data. The methodology is general and is well-suited to **pediatric, pediatric oncology, and rare-disease populations**, where interpretable, per-patient phenotype profiles are especially valuable.
+**CharmPheno** is an interpretable **computational phenotyping** capability for discovery and characterization of patient phenotypes from large-scale structured patient health records. The approach uses a Bayesian nonparametric model whose output is interpretable (each phenotype is a clinically-readable distribution over medical codes or events) and uncertainty-aware. The phenotype model is trained on large-scale clinical data via a distributed [Bayesian variational-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods) (VI) framework, and then applied per-patient using the trained population-level parameters and that patient's own data. Cohort-based aggregrate phenotypes are also possible for **pediatric, pediatric oncology, and rare-disease populations**, and they may be compared and contrasted to control cohorts as well.
 
-Trained CharmPheno models are delivered through the existing CHARMTwinsight model-hosting service. Because trained models contain only compact population-level parameters and no patient data, on-device inference scenarios — in which the trained model is shipped to a patient device and inference runs locally against the patient's own data — are also a natural deployment target and are investigated as part of the work.
+Trained CharmPheno models are delivered through the existing CHARMTwinsight model-hosting service. Because trained models contain only compact population-level parameters and no patient data, on-device inference scenarios, in which the trained model is shipped to a patient device (e.g. via MyCharm) and inference runs locally against the patient's own data, are also a natural deployment target and are investigated as part of the work.
 
 **This work supports:**
 
-- **Patient-controlled longitudinal self-summarization** — a patient's phenotype profile can be maintained and updated over time as new clinical data becomes available, producing a structured, uncertainty-quantified summary of the patient's clinical picture.
-- **Interpretable structured summaries for patient–provider communication** — phenotype profiles serve as a clinically-readable starting point for conversations between patients, families, and care teams, with particular value in complex multimorbid, pediatric, and rare-disease contexts.
+- **Patient-controlled longitudinal self-summarization** — a patient's phenotype profile can be maintained and updated over time as new clinical data becomes available, producing a dynamic structured summary of the patient's clinical picture.
+- **Phenotype-based patient similarity and trajectory exploration** — phenotype profiles are a substrate for downstream capabilities including patient similarity ("patients like me") and, when combined with dynamic models, generation of plausible patient trajectories for risk exploration and what-if analysis.
 
 <div style="max-width: 70%;">
 
@@ -52,17 +52,15 @@ data. The per-document phenotype profiles serve as rich, interpretable, uncertai
 summaries of the patient's clinical picture, suitable for direct review by clinicians
 and patients alike.
 
-**Interpretable patient embeddings as a first-class output.** The per-patient
-phenotype profiles are dense, low-dimensional vector representations of patients —
-*interpretable* patient embeddings, where each coordinate corresponds to a learned
+**Interpretable patient phenotype profiles as a first-class output.** The per-patient
+phenotype profiles are interpretable, probabilistic representations of patients, where 
+each coordinate corresponds to a learned
 clinical phenotype with a clinical meaning rather than an opaque latent dimension.
 These embeddings are emitted in a form directly consumable by standard vector-search
 infrastructure (cosine similarity over the emitted vectors is principled by
-construction — see the [research design](TOPIC_STATE_MODELING.md) for details),
+construction; see the [research design](TOPIC_STATE_MODELING.md) for details),
 enabling patient retrieval, cohort similarity search, and integration with any
-downstream ML pipeline that speaks the embedding vocabulary, while retaining the
-clinical interpretability and uncertainty quantification the Bayesian pipeline
-provides.
+downstream ML pipeline that speaks the embedding vocabulary.
 
 ```mermaid
 graph LR

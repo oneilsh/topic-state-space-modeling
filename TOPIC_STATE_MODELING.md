@@ -35,6 +35,7 @@
   - [Handling Rare Phenotypes in OU Estimation](#handling-rare-phenotypes-in-ou-estimation)
   - [Periodic and Seasonal Extensions](#periodic-and-seasonal-extensions)
   - [Joint Estimation](#joint-estimation)
+  - [Compositional Outcome Association for High-Dimensional Phenotype Profiles](#compositional-outcome-association-for-high-dimensional-phenotype-profiles)
   - [Causal Interpretation Caveats](#causal-interpretation-caveats)
 - [References](#references)
 
@@ -1129,6 +1130,44 @@ temporal dynamics are being merged), a joint model could be pursued. The archite
 would combine the HDP variational E-step with an OU-coupled prior over the topic
 proportions. This is a substantial research contribution in its own right and should
 only be attempted after validating the two-stage pipeline on real data.
+
+### Compositional Outcome Association for High-Dimensional Phenotype Profiles
+
+A natural downstream use of per-patient phenotype profiles is outcome association:
+regressing a clinical outcome against the phenotype profile plus covariates. The
+standard approach in prior work — including the PI's Long-COVID topic-modeling
+paper (Peskoe et al., 2024, *npj Digital Medicine*) and Hubbard et al. (2021) — is
+to run per-phenotype univariate regressions, one model per topic. This is
+interpretable and tractable, but it ignores the compositional constraint
+($\sum_k \theta_k = 1$): the $K$ regressions are not independent, and effect-size
+and significance estimates are miscalibrated in known ways.
+
+The statistically principled alternative is a **compositional regression** that
+treats $\theta$ as a unit — Dirichlet regression, multinomial-logit regression, or
+log-ratio regression on an ILR-transformed profile. At the scale of $K \sim 300$
+topics this is computationally heavy and interpretability-poor (coefficients live
+in a log-ratio basis, not in the original phenotype space), which is why the
+per-phenotype approach has been the practical default. Three candidate
+mitigations are worth investigating if downstream outcome association becomes a
+deliverable:
+
+- **Sparse log-contrast regression** (Lin et al.) with $L_1$ or grouped penalties,
+  which selects a handful of relevant phenotypes automatically and effectively
+  reduces the compositional dimensionality to the support set.
+- **Projection to a lower-dimensional compositional subspace** — either clinically
+  motivated meta-phenotype groupings, hierarchical clustering of topics, or
+  Aitchison-geometry PCA — followed by compositional regression in the
+  reduced space.
+- **Per-phenotype regression with explicit compositional acknowledgment**:
+  multiplicity correction, framing effect sizes as relative rather than absolute,
+  and reporting the compositional constraint as a known limitation. This is the
+  most defensible version of current practice and probably the right baseline to
+  compare any more sophisticated approach against.
+
+None of this is in scope for the core phenotyping deliverable. But it is the
+question a statistically-sophisticated reviewer will ask about CharmPheno's
+downstream usability, and it is the natural methodological follow-on once the
+phenotyping capability is in place.
 
 ### Causal Interpretation Caveats
 

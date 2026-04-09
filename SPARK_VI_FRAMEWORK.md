@@ -622,6 +622,25 @@ population-level parameters — no patient data.
 These are ideas surfaced during design that are explicitly **out of scope for v1** but
 worth pursuing:
 
+### Bayesian Latent-Class Phenotype Estimation Models
+
+The framework is well-suited to Bayesian latent-class phenotype-estimation models in
+the style of Hubbard et al. (2021, *Estimating Patient Phenotypes and Outcome-Exposure
+Associations in the Presence of Missing Data in Electronic Health Records*), where a
+pre-specified phenotype (e.g., pediatric type 2 diabetes) is estimated from noisy and
+informatively-missing EHR indicators. This class of models is structurally lighter
+than the HDP: the per-patient E-step is a closed-form Bayes-rule calculation over a
+small finite latent space (not an iterative coordinate-ascent loop), the global state
+is a handful of class-prevalence and per-class emission parameters (kilobytes rather
+than megabytes), and the M-step is a closed-form conjugate update on the aggregated
+sufficient statistics. Such models would run comfortably in spark-vi with no
+architectural changes and would give the framework a concrete second-model-family
+demonstration complementary to the HDP — an unsupervised-discovery model and a
+pre-specified-phenotype-estimation model sharing the same infrastructure. Extensions
+to model MNAR missingness (with dependence on the unobserved indicator value) fit
+naturally via data augmentation, which remains compatible with the
+broadcast→aggregate→update pattern.
+
 ### Autodiff on Workers
 
 Allow JAX or PyTorch on workers for automatic differentiation of the local ELBO. This

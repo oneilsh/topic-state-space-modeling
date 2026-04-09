@@ -8,8 +8,8 @@ an interpretable approach to discovering interpretable and clinically meaningful
 The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
 and applies it to discover latent phenotypes contributing to profiles.
 It also characterizes the resulting phenotypes and profiles in general, in specific populations (rare disease and pediatric oncology patients), and at the individual level.
-Patient phenotype profiles are interpretable, probabilistic representations that serve as a substrate for a range of downstream capabilities,
-including profile-based search,
+Patient phenotype profiles are interpretable, probabilistic representations that serve a range of downstream capabilities,
+including profile-based matching,
 profiles that evolve over time,
 and generation of plausible patient profiles for risk exploration and what-if analyses.
 Trained phenotype models are suitable for deployment through the existing CHARMTwinsight model hosting infrastructure

@@ -1,8 +1,19 @@
-## **Task C3.T3b**
+## **Task C7.T1 (CharmPheno)**
 
-**Objective:** *Develop Bayesian state modeling capabilities for unsupervised clinical phenotype discovery and outcome characterization within CHARMTwinsight*
+**Objective:** *Develop CharmPheno: an interpretable computational phenotyping capability for discovery and characterization of clinical phenotypes from patient health records, supporting patient-owned health insight*
 
-**Task Description:** This task develops a distributed Bayesian state modeling framework and applies it to structured clinical data for unsupervised phenotype discovery and outcome characterization, with the goal of enabling personalized, patient-facing health insights. The work will design and implement a general-purpose distributed variational inference framework suitable for large-scale clinical datasets, implement and explore Bayesian models for discovering latent clinical phenotypes from diagnosis code data, and benchmark approaches on synthetic and reference datasets before applying them to de-identified clinical data. The framework will be designed for compatibility with the existing CHARMTwinsight model hosting infrastructure. Because trained models consist of compact population-level parameters rather than patient data, the framework naturally supports lightweight deployment scenarios — including on-device inference where a patient's own data never leaves their device.
+**Task Description:**
+This task develops the **CharmPheno** computational phenotyping capability:
+an interpretable approach to discovering interpretable and clinically meaningful patient *phenotypes profiles* from structured health records as a foundation for personalized health insight.
+The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
+and applies it to discover latent phenotypes contributing to profiles.
+It also characterizes the resulting phenotypes and profiles in general, in specific populations (rare disease and pediatric oncology patients), and at the individual level.
+Patient phenotype profiles are interpretable, probabilistic representations that serve a range of downstream capabilities,
+including profile-based matching,
+profiles that evolve over time,
+and generation of plausible patient profiles for risk exploration and what-if analyses.
+Trained phenotype models are suitable for deployment through the existing CHARMTwinsight model hosting infrastructure
+and for lightweight inference scenarios including on-device deployment (e.g. MyCharm) where a patient's own data need not leave their device.
 
 **Location:** Work will be performed at UNC
 
@@ -12,73 +23,93 @@
 
 **Human Subjects or Animal Research?:** No
 
-### ***Sub-task C3.T3b.3m***
+### ***Sub-task C7.T1.3m***
 
-**Objective:** *Design the architecture for a distributed Bayesian state modeling framework and strategies for unsupervised clinical phenotype discovery from structured patient data*
+**Objective:** *Design the architecture for the CharmPheno phenotype discovery capability and the distributed inference framework that supports it*
 
-**Task Description:** Design the computational framework for distributed variational inference on large-scale clinical datasets, including the base abstractions, data contracts, and training orchestration. Specify modeling strategies for unsupervised phenotype discovery from structured diagnosis code data, identifying candidate models and their suitability for clinical applications. The design will address patient privacy, reproducibility, and compatibility with the CHARMTwinsight model hosting service. The design document must include a security and privacy plan. This task aligns with the 27-month milestone (C3b.Y3.M0.5).
+**Task Description:**
+Design the CharmPheno phenotype discovery approach and the computational framework that supports it.
+Specify modeling strategies for unsupervised discovery of clinical phenotypes from structured de-identified health records, identifying top candidate models (including Bayesian nonparametric approaches).
+Design the distributed inference framework needed to train such models on large-scale clinical datasets, including the base abstractions, data contracts, and training orchestration.
+The design will address patient privacy, reproducibility, and compatibility with the CHARMTwinsight model hosting service.
+The design document must include a security and privacy plan.
+This task aligns with the 27-month milestone (C7.Y1.M0.5).
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y3.D3m-D: Framework architecture and phenotype discovery strategy design document, including security and privacy plan.
+**Deliverables:** Deliverable C7.Y1.D3m-D: CharmPheno phenotype discovery strategy and supporting framework architecture design document, including security and privacy plan.
 
 **Human Subjects or Animal Research?:** No
 
-**Milestone C3b.Y3.M0.5:** 27 months: Completion of framework architecture and phenotype discovery strategy design.
+**Milestone C7.Y1.M0.5:** 27 months: Completion of CharmPheno phenotype discovery strategy and framework architecture design.
 
-### ***Sub-task C3.T3b.6m***
+### ***Sub-task C7.T1.6m***
 
-**Objective:** *Implement the distributed variational inference framework with initial model implementations, validated on synthetic data*
+**Objective:** *Implement the CharmPheno phenotype discovery framework with initial phenotype model implementations, validated on synthetic data*
 
-**Task Description:** Implement the core framework, including the model base class, training orchestration, convergence diagnostics, and model serialization. Develop initial model implementations targeting phenotype discovery from discrete clinical data. Validate correctness and parameter recovery using synthetic datasets with known latent structure. This sub-task aligns with Deliverable C3b.Y3.D6m at the 30-month milestone.
+**Task Description:**
+Implement the CharmPheno computational phenotyping framework, including the model base class, training orchestration, diagnostics, and serialization.
+Test training established models on generated synthetic data from CHARMTwinsight, evaluating scalability, portability, and correctness against known latent structure.
+The resulting reusable, cross-platform framework will support a general class of phenotype models applicable to large-scale de-identified clinical data.
+This sub-task aligns with Deliverable C7.Y1.D6m at the 30-month milestone.
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y3.D6m-CA: Distributed variational inference framework with initial model implementations and synthetic validation results.
+**Deliverables:** Deliverable C7.Y1.D6m-CA: CharmPheno phenotype discovery framework with initial phenotype model implementations and synthetic validation results.
 
 **Human Subjects or Animal Research?:** No
 
-### ***Sub-task C3.T3b.9m***
+### ***Sub-task C7.T1.9m***
 
-**Objective:** *Implement and explore additional modeling approaches for phenotype characterization; benchmark on synthetic and reference datasets*
+**Objective:** *Implement and explore additional CharmPheno phenotype discovery and characterization approaches; benchmark on synthetic and clinical datasets*
 
-**Task Description:** Extend the framework with additional model implementations targeting phenotype characterization and outcome modeling. Benchmark candidate approaches on synthetic and, where available, de-identified reference datasets. Assess model quality, interpretability of discovered phenotypes, computational performance, and scalability. This task aligns with the 33-month milestone (C3b.Y3.M1.5).
+**Task Description:**
+Extend the CharmPheno framework with additional phenotype model implementations targeting richer phenotype discovery and characterization.
+Test candidate models on synthetic and de-identified clinical datasets and assess interpretability.
+This task aligns with the 33-month milestone (C7.Y1.M1.5).
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y3.D9m-D: Report on the implementation and benchmarking of modeling approaches for clinical phenotype characterization.
+**Deliverables:** Deliverable C7.Y1.D9m-D: Report on the implementation and benchmarking of CharmPheno phenotype discovery and characterization approaches.
 
 **Human Subjects or Animal Research?:** No
 
-**Milestone C3b.Y3.M1.5:** 33 months: Completion of implementation and benchmarking of additional modeling approaches.
+**Milestone C7.Y1.M1.5:** 33 months: Completion of implementation and benchmarking of additional CharmPheno phenotype discovery approaches.
 
-### ***Sub-task C3.T3b.12m***
+### ***Sub-task C7.T1.12m***
 
-**Objective:** *Apply the modeling pipeline to clinical data; deliver initial phenotype discovery and outcome characterization results*
+**Objective:** *Apply CharmPheno to clinical data; deliver initial phenotype discovery and characterization results*
 
-**Task Description:** Apply the developed pipeline to clinical datasets. Characterize discovered phenotypes and their relationships to clinical outcomes. Evaluate clinical interpretability and identify directions for refinement. This sub-task aligns with Deliverable C3b.Y3.D12m at the 36-month milestone.
+**Task Description:**
+Apply the CharmPheno phenotype discovery pipeline to clinical datasets at scale.
+Characterize discovered phenotypes (clusters of e.g. conditions, medications, procedures, etc.) by their composition using standard approaches, and their prevalence patterns across cohorts.
+Evaluate interpretability of the discovered phenotypes and identify directions for refinement.
+This sub-task aligns with Deliverable C7.Y1.D12m at the 36-month milestone.
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y3.D12m-CA: Modeling framework applied to clinical data, with initial phenotype discovery and outcome characterization results.
+**Deliverables:** Deliverable C7.Y1.D12m-CA: CharmPheno phenotype discovery pipeline applied to clinical data, with initial phenotype discovery and characterization results.
 
 **Human Subjects or Animal Research?:** No
 
 ---
 
-## **Task C3.T4b**
+## **Task C7.T2 (CharmPheno)**
 
-**Objective:** *Integrate trained Bayesian state models with CHARMTwinsight model hosting and develop patient-facing outcome capabilities*
+**Objective:** *Integrate trained CharmPheno phenotype models with the CHARMTwinsight platform and develop patient-facing phenotype characterization capabilities*
 
-**Task Description:** This task extends the Bayesian state modeling work into the CHARMTwinsight platform, focusing on model serving, patient-facing capabilities, and interoperability. Trained models will be integrated with the existing model hosting service to enable phenotype-based patient characterization. The task will explore outcome prediction, simulation, and visualization capabilities, integrate with other CHARM tools, and assess the feasibility of lightweight on-device deployment for privacy-preserving patient-facing applications.
+**Task Description:**
+This task extends the CharmPheno computational phenotyping work into the CHARMTwinsight platform, focusing on phenotype model serving, patient-facing phenotype characterization capabilities, and interoperability.
+Trained phenotype models will be integrated with the existing CHARMTwinsight model hosting service to enable phenotype assignment and characterization for individual patient records.
+The task will explore phenotype characterization workflows, profile visualizations, and integration with other CHARM tools, including the mobile application MyCharm with local and hosted profiling.
 
 **Location:** Work will be performed at UNC
 
@@ -88,62 +119,77 @@
 
 **Human Subjects or Animal Research?:** No
 
-### ***Sub-task C3.T4b.3m***
+### ***Sub-task C7.T2.3m***
 
-**Objective:** *Design the architecture for integrating trained models with CHARMTwinsight model hosting and patient-facing outcome capabilities*
+**Objective:** *Design the architecture for integrating trained CharmPheno phenotype models with CHARMTwinsight model hosting and patient-facing phenotype characterization capabilities*
 
-**Task Description:** Design the integration architecture for deploying trained Bayesian state models through the CHARMTwinsight model hosting service and potentially directly to patient devices. Specify interfaces for patient characterization, outcome prediction, and model-driven simulation. Address model versioning, update workflows, and security considerations for serving population-level models in patient-facing contexts, including an assessment of on-device deployment where patient data remains local. The design document must include a security and privacy plan. This task aligns with the 39-month milestone (C3b.Y4.M0.5).
+**Task Description:**
+Design the integration architecture for deploying trained CharmPheno phenotype models through the CHARMTwinsight model hosting service.
+Specify interfaces for per-patient phenotype assignment, phenotype profile retrieval, and phenotype-trajectory characterization.
+Address model versioning, update workflows, and security considerations for serving phenotype models in patient-facing contexts, including on-device deployment.
+The design document must include a security and privacy plan.
+This task aligns with the 39-month milestone (C7.Y2.M0.5).
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y4.D3m-D: Model integration and patient-facing outcome capabilities architecture design document, including security and privacy plan.
+**Deliverables:** Deliverable C7.Y2.D3m-D: CharmPheno integration and patient-facing phenotype characterization architecture design document, including security and privacy plan.
 
 **Human Subjects or Animal Research?:** No
 
-**Milestone C3b.Y4.M0.5:** 39 months: Completion of model integration and patient-facing capabilities architecture design.
+**Milestone C7.Y2.M0.5:** 39 months: Completion of CharmPheno integration and patient-facing capabilities architecture design.
 
-### ***Sub-task C3.T4b.6m***
+### ***Sub-task C7.T2.6m***
 
-**Objective:** *Develop exportable model pipeline and integrate with CHARMTwinsight model hosting for patient characterization*
+**Objective:** *Develop exportable phenotype model pipeline and integrate CharmPheno with CHARMTwinsight model hosting for patient phenotype characterization*
 
-**Task Description:** Implement the model export and deployment pipeline connecting the modeling framework to the CHARMTwinsight model hosting service. Develop patient characterization capabilities accessible through the hosted model API, enabling phenotype assignment and outcome estimation for individual patient records. This sub-task aligns with Deliverable C3b.Y4.D6m at the 42-month milestone.
+**Task Description:**
+Implement the phenotype model export and deployment pipeline connecting the CharmPheno framework to the CHARMTwinsight model hosting service.
+Develop patient phenotype characterization capabilities accessible through the hosted model API, enabling per-patient phenotype assignment and phenotype profile retrieval for individual patient records.
+This sub-task aligns with Deliverable C7.Y2.D6m at the 42-month milestone.
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y4.D6m-CA: Model export pipeline and hosting integration with patient characterization capabilities.
+**Deliverables:** Deliverable C7.Y2.D6m-CA: CharmPheno phenotype model export pipeline and CHARMTwinsight hosting integration with patient phenotype characterization capabilities.
 
 **Human Subjects or Animal Research?:** No
 
-### ***Sub-task C3.T4b.9m***
+### ***Sub-task C7.T2.9m***
 
-**Objective:** *Explore outcome prediction, simulation, and visualization capabilities; investigate FHIR-compatible inference workflows*
+**Objective:** *Enhance phenotype characterization and phenotype-trajectory visualization capabilities; investigate FHIR-compatible inference workflows and on-device deployment feasibility*
 
-**Task Description:** Explore outcome prediction and simulation capabilities using served models, including visualization of phenotype characterizations and outcome estimates. Investigate the feasibility of FHIR-compatible inference workflows, assessing the translation layer required to map FHIR clinical resources to model vocabularies at inference time. Assess lightweight inference runtimes suitable for on-device deployment, where trained population-level models are shipped to patient devices and inference is performed locally against the patient's own data without transmitting it externally. This task aligns with the 45-month milestone (C3b.Y4.M1.5).
+**Task Description:**
+Enhance patient phenotype characterization workflows using served CharmPheno models, including visualization of per-patient phenotype profiles and phenotype-trajectory views over time.
+Investigate the feasibility of FHIR-compatible inference workflows, assessing the translation layer required to map FHIR clinical resources to the phenotype model's vocabulary at inference time.
+Assess lightweight inference runtimes suitable for on-device deployment, where trained phenotype models are shipped to patient devices and inference is performed locally against the patient's own data without transmitting it externally.
+This task aligns with the 45-month milestone (C7.Y2.M1.5).
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y4.D9m-D: Report on outcome prediction and simulation capabilities, including FHIR-compatible inference and on-device deployment feasibility assessment.
+**Deliverables:** Deliverable C7.Y2.D9m-D: Report on phenotype characterization and visualization capabilities, including FHIR-compatible inference and on-device deployment feasibility assessment.
 
 **Human Subjects or Animal Research?:** No
 
-**Milestone C3b.Y4.M1.5:** 45 months: Completion of outcome and simulation exploration, including FHIR compatibility and on-device deployment assessment.
+**Milestone C7.Y2.M1.5:** 45 months: Completion of phenotype characterization and visualization exploration, including FHIR compatibility and on-device deployment feasibility assessment.
 
-### ***Sub-task C3.T4b.12m***
+### ***Sub-task C7.T2.12m***
 
-**Objective:** *Deliver hardened Bayesian state modeling capabilities within CHARMTwinsight, with served models supporting patient characterization and outcome exploration*
+**Objective:** *Deliver hardened CharmPheno phenotyping capabilities within CHARMTwinsight, with served phenotype models supporting patient phenotype characterization*
 
-**Task Description:** Harden the platform integration to version readiness. Ensure robustness, scalability, and documentation of the model serving pipeline, patient characterization capabilities, and any FHIR-compatible inference support developed during the exploration phase. This sub-task aligns with Deliverable C3b.Y4.D12m at the 48-month milestone.
+**Task Description:**
+Harden the CharmPheno platform integration to version readiness.
+Ensure robustness, ease of use, and documentation of the phenotype modeling components, the patient phenotype characterization capabilities, and any inference support developed during the exploration phase.
+This sub-task aligns with Deliverable C7.Y2.D12m at the 48-month milestone.
 
 **Location:** Work will be performed at UNC
 
 **Primary Organization Responsible:** UNC
 
-**Deliverables:** Deliverable C3b.Y4.D12m-CA: CHARMTwinsight with hardened Bayesian state modeling capabilities for patient characterization and outcome exploration.
+**Deliverables:** Deliverable C7.Y2.D12m-CA: CHARMTwinsight with hardened CharmPheno phenotyping capabilities for patient phenotype characterization.
 
 **Human Subjects or Animal Research?:** No

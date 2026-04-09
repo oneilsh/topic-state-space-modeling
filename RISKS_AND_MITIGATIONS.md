@@ -396,4 +396,48 @@ primary contribution. The scientific contribution is the two-stage pipeline (HDP
 and its clinical application; the framework is the vehicle. See the "Prior Art &
 Positioning" section in SPARK_VI_FRAMEWORK.md for a detailed comparison.
 
+### Reviewer comparison to Bayesian latent-class EHR phenotyping (Hubbard et al., PCORI)
+
+**Risk:** A reviewer familiar with prior PCORI-funded EHR phenotyping work
+— particularly Hubbard et al. (2021), *Estimating Patient Phenotypes and
+Outcome-Exposure Associations in the Presence of Missing Data in Electronic
+Health Records*, developed within PEDSnet and applied to pediatric type 2
+diabetes — could see surface overlap: both projects use unsupervised Bayesian
+methods for EHR phenotyping, both target pediatric populations, and both
+reject rule-based Boolean "computable phenotypes" in favor of probabilistic
+approaches. A reviewer who knows this work may question whether CharmPheno
+duplicates it.
+
+**Impact:** Low-to-medium. The overlap is largely in vocabulary and
+high-level framing; the technical targets are meaningfully different. But
+it's worth being explicit about the distinction in proposal narrative to
+defuse the comparison.
+
+**Mitigation:** Hubbard et al. develop a **Bayesian latent-class model that
+estimates a single pre-specified phenotype** (e.g., T2DM yes/no) more
+accurately than Boolean rules by modeling informative missingness in EHR
+data. The phenotype to estimate is specified in advance; the contribution is
+in the estimator's handling of MAR/MNAR missingness and in its downstream
+use in exposure–outcome association analyses. CharmPheno does something
+categorically different: it **discovers the set of phenotypes** from
+co-occurrence structure in the data without specifying them in advance, and
+produces per-patient mixture profiles over the learned phenotype set. The
+two approaches sit at different points in the phenotyping pipeline — in
+principle a CharmPheno-derived phenotype definition could serve as the
+latent-class target for a Hubbard-style estimator — and they should be
+positioned as complementary rather than competing. The proposal narrative
+should name Hubbard et al. explicitly in the related-work framing and state
+this distinction in one sentence.
+
+**Known methodological gap:** Hubbard et al.'s central technical contribution
+is the treatment of informative missingness in EHR data (a code's absence
+often carries signal: a test wasn't ordered, a condition wasn't looked for).
+CharmPheno as currently designed follows the standard topic-modeling
+convention of treating absent codes as simply absent, which is a known
+simplification in the clinical context. This isn't a fatal flaw — most
+unsupervised EHR phenotyping work has the same simplification — but
+extending CharmPheno to model informative missingness is a natural direction
+for follow-on work and would address the one technical dimension where
+Hubbard et al. have something the current CharmPheno design does not.
+
 ---

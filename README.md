@@ -1,31 +1,35 @@
-# Bayesian State Modeling for Clinical Phenotype Discovery and Patient Outcomes
+# CharmPheno: Interpretable Computational Phenotyping for Patient-Owned Health Insight
 
-This project develops a distributed [Bayesian variational-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods) (VI) state modeling framework for unsupervised clinical phenotype discovery and outcome characterization, with the goal of **enabling personalized, patient-facing health insights, including outcome prediction and simulation conditioned
-on population-derived statistical patterns.**
+**CharmPheno** is an interpretable **computational phenotyping** capability for discovery and characterization of patient phenotypes from large-scale structured patient health records. The approach uses a Bayesian nonparametric model whose output is interpretable (each phenotype is a clinically-readable distribution over medical codes or events) and uncertainty-aware. The phenotype model is trained on large-scale clinical data via a distributed [Bayesian variational-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods) (VI) framework, and then applied per-patient using the trained population-level parameters and that patient's own data. Cohort-based aggregrate phenotypes are also possible for **pediatric, pediatric oncology, and rare-disease populations**, and they may be compared and contrasted to control cohorts as well.
+
+Trained CharmPheno models are delivered through the existing CHARMTwinsight model-hosting service. Because trained models contain only compact population-level parameters and no patient data, on-device inference scenarios, in which the trained model is shipped to a patient device (e.g. via MyCharm) and inference runs locally against the patient's own data, are also a natural deployment target and are investigated as part of the work.
+
+**This work supports:**
+
+- **Patient-controlled longitudinal self-summarization** — a patient's phenotype profile can be maintained and updated over time as new clinical data becomes available, producing a dynamic structured summary of the patient's clinical picture.
+- **Phenotype-based patient similarity and trajectory exploration** — phenotype profiles are a substrate for downstream capabilities including patient similarity ("patients like me") and, when combined with dynamic models, generation of plausible patient trajectories for risk exploration and what-if analysis.
 
 <div style="max-width: 70%;">
 
 ```mermaid
 graph LR
-    A(["Clinical Data"]) --> B(["Bayesian VI<br/>Phenotype Discovery"])
-    B --> C(["Phenotype<br/>Profiles"])
-    C --> D(["Outcome<br/>Characterization"])
-    C --> E(["Simulation"])
-    C --> F(["Prediction"])
-    D & E & F --> G(["Patient-Facing<br/>Insights"])
+    A(["Clinical Data"]) --> B(["CharmPheno<br/>Phenotype Discovery<br/>(Bayesian VI)"])
+    B --> C(["Per-Patient<br/>Phenotype<br/>Profiles"])
+    C --> D(["Patient<br/>Phenotype<br/>Characterization"])
+    C --> E(["Phenotype-Trajectory<br/>Visualization"])
+    D & E --> G(["Patient-Owned<br/>Health Insight"])
 
     style A fill:#e8d4f0,stroke:#7b2d8e,stroke-width:2px
     style B fill:#fff3cd,stroke:#d4a017,stroke-width:2px
     style C fill:#d4edda,stroke:#28a745,stroke-width:2px
     style D fill:#cce5ff,stroke:#0069d9,stroke-width:2px
     style E fill:#cce5ff,stroke:#0069d9,stroke-width:2px
-    style F fill:#cce5ff,stroke:#0069d9,stroke-width:2px
     style G fill:#d4edda,stroke:#28a745,stroke-width:2px
 ```
 
 </div>
 
-The work spans three layers: a research design for the clinical modeling approach, a reusable software framework for fitting Bayesian models at scale on Spark, and a milestone plan for delivering these capabilities within the CHARMTwinsight platform.
+The work spans three layers: a research design for the clinical phenotyping approach, a reusable software framework for fitting the underlying Bayesian phenotype models at scale on Spark, and a milestone plan for delivering CharmPheno within the CHARMTwinsight platform.
 
 ---
 
@@ -44,21 +48,19 @@ distribution over the diagnosis vocabulary rather than a hard cluster assignment
 Because the approach is Bayesian, the model quantifies uncertainty at every level:
 which diagnoses characterize which phenotype, how strongly a given document
 reflects each phenotype, and how confident those estimates are given the available
-data. The per-document phenotype profiles serve as rich, interpretable
-features for downstream outcome characterization, simulation, and prediction
-tasks.
+data. The per-document phenotype profiles serve as rich, interpretable, uncertainty-aware
+summaries of the patient's clinical picture, suitable for direct review by clinicians
+and patients alike.
 
-**Interpretable patient embeddings as a first-class output.** The per-patient
-phenotype profiles are dense, low-dimensional vector representations of patients —
-*interpretable* patient embeddings, where each coordinate corresponds to a learned
+**Interpretable patient phenotype profiles as a first-class output.** The per-patient
+phenotype profiles are interpretable, probabilistic representations of patients, where 
+each coordinate corresponds to a learned
 clinical phenotype with a clinical meaning rather than an opaque latent dimension.
 These embeddings are emitted in a form directly consumable by standard vector-search
 infrastructure (cosine similarity over the emitted vectors is principled by
-construction — see the [research design](TOPIC_STATE_MODELING.md) for details),
+construction; see the [research design](TOPIC_STATE_MODELING.md) for details),
 enabling patient retrieval, cohort similarity search, and integration with any
-downstream ML pipeline that speaks the embedding vocabulary, while retaining the
-clinical interpretability and uncertainty quantification the Bayesian pipeline
-provides.
+downstream ML pipeline that speaks the embedding vocabulary.
 
 ```mermaid
 graph LR
@@ -108,18 +110,23 @@ iteration:
 2. **Global step**: aggregate the local results across all documents to update
    the phenotype distributions themselves (and the number of active phenotypes).
 
-## spark-vi: A Reusable Framework for Distributed Bayesian Modeling
+## spark-vi: The Distributed Inference Framework Underneath CharmPheno
 
-The HDP will be the first model built on **spark-vi**, a new general-purpose PySpark
+The CharmPheno phenotype model is built on **spark-vi**, a general-purpose PySpark
 framework for fitting Bayesian models at scale. The framework is designed to be
-reusable: a model author defines the model-specific math, and the framework
-handles distribution across a Spark cluster, training loop management,
-convergence monitoring, and model export. Other Bayesian models that follow the
-same distribute-and-aggregate pattern can plug in without re-implementing the
-infrastructure.
+reusable: a model author defines the model-specific math, and the framework handles
+distribution across a Spark cluster, training loop management, convergence monitoring,
+and model export. Training the phenotype model on large-scale clinical data — yielding
+richer, more clinically detailed phenotypes than smaller-scale fits — is what spark-vi
+enables. Other Bayesian models that follow the same distribute-and-aggregate pattern
+can plug into the same framework without re-implementing the infrastructure.
 
-Trained models are compact population-level distributional parameters (~30-60 MB) containing no
-patient data and minimal-to-no reidentification risk, and small enough to export and deploy to a model hosting service or a patient's device for private, on-device usage.
+Trained CharmPheno phenotype models are compact population-level distributional
+parameters (~30-60 MB) containing no patient data. They are delivered through the
+existing CHARMTwinsight model hosting service, and the compactness of the model
+artifacts also makes on-device inference — where the trained model is shipped to a
+patient device and inference runs locally against the patient's own data — a natural
+deployment target.
 
 ```mermaid
 graph LR
@@ -135,7 +142,7 @@ graph LR
     end
 
     AG -->|converged| EX(["Export"])
-    EX --> MH(["Model Hosting<br/>Service"])
+    EX --> MH(["CHARMTwinsight<br/>Model Hosting"])
     EX --> PH(["On-Device<br/>Inference"])
 
     style G fill:#fff3cd,stroke:#d4a017,stroke-width:2px
@@ -152,19 +159,19 @@ graph LR
 
 ## Documents
 
-- **[Topic-State Modeling Research Design](TOPIC_STATE_MODELING.md)** -- The scientific
-  foundation. Describes the Bayesian approach to discovering clinical phenotypes from
-  diagnosis code data using a Hierarchical Dirichlet Process, with discussion of
-  model architecture, computational design, and extensions for modeling patient
-  dynamics.
+- **[Research Design](TOPIC_STATE_MODELING.md)** -- The scientific foundation. Describes
+  the Bayesian approach to discovering clinical phenotypes from diagnosis code data
+  using a Hierarchical Dirichlet Process, with discussion of model architecture,
+  computational design, and longer-horizon research extensions.
 
 - **[spark-vi Framework Design](SPARK_VI_FRAMEWORK.md)** -- The software architecture.
   A PySpark-native framework for distributed variational inference where model authors
   implement the math and the framework handles Spark orchestration, training loops,
   diagnostics, and model export. Notebook-first, with compact privacy-friendly model
-  artifacts suitable for lightweight deployment including on-device inference.
+  artifacts suitable for lightweight deployment.
 
-- **[Milestones (C3.T3b / C3.T4b)](MILESTONES.md)** -- The delivery plan. Eight
-  quarterly milestones across two years: Year 3 builds the framework and applies it
-  to clinical data; Year 4 integrates trained models with CHARMTwinsight model hosting
-  and explores patient-facing outcome capabilities.
+- **[Milestones (C7.T1 / C7.T2)](MILESTONES.md)** -- The delivery plan. Eight quarterly
+  milestones across two years: Year 1 designs and implements the CharmPheno phenotype
+  discovery framework and applies it to clinical data; Year 2 integrates trained
+  CharmPheno models with CHARMTwinsight model hosting and develops per-patient
+  phenotype characterization capabilities.

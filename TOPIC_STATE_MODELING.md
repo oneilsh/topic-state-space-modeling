@@ -1136,7 +1136,7 @@ only be attempted after validating the two-stage pipeline on real data.
 A natural downstream use of per-patient phenotype profiles is outcome association:
 regressing a clinical outcome against the phenotype profile plus covariates. The
 standard approach in prior work — including the PI's Long-COVID topic-modeling
-paper (Peskoe et al., 2024, *npj Digital Medicine*) and Hubbard et al. (2021) — is
+paper (O'Neil et al., 2024, *npj Digital Medicine*) and Hubbard et al. (2021) — is
 to run per-phenotype univariate regressions, one model per topic. This is
 interpretable and tractable, but it ignores the compositional constraint
 ($\sum_k \theta_k = 1$): the $K$ regressions are not independent, and effect-size

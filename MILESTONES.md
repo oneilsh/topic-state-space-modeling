@@ -4,15 +4,14 @@
 
 **Task Description:**
 This task develops the **CharmPheno** computational phenotyping capability:
-an interpretable approach to discovering clinically meaningful patient phenotypes profiles from structured patient health records,
-supporting per-patient phenotype profiles as a foundation for personalized health insight.
-The work develops a reusable, distributed inference framework that enables training on large-scale clinical data,
-applies it to discover latent clinical phenotypes,
-and characterizes those phenotypes in general, in specific populations (e.g. rare disease or pediatric oncology patients as compared to control cohorts), and at the individual level.
+an interpretable approach to discovering interpretable and clinically meaningful patient *phenotypes profiles* from structured health records as a foundation for personalized health insight.
+The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
+and applies it to discover latent phenotypes contributing to profiles.
+It also characterizes the resulting phenotypes and profiles in general, in specific populations (rare disease and pediatric oncology patients), and at the individual level.
 Patient phenotype profiles are interpretable, probabilistic representations that serve as a substrate for a range of downstream capabilities,
-including phenotype-based patient similarity ("patients like me"),
-longitudinal profiles that evolve over time,
-and generation of plausible patient trajectories for risk exploration and what-if analyses.
+including profile-based search,
+profiles that evolve over time,
+and generation of plausible patient profiles for risk exploration and what-if analyses.
 Trained phenotype models are suitable for deployment through the existing CHARMTwinsight model hosting infrastructure
 and for lightweight inference scenarios including on-device deployment (e.g. MyCharm) where a patient's own data need not leave their device.
 
@@ -110,7 +109,7 @@ This sub-task aligns with Deliverable C7.Y1.D12m at the 36-month milestone.
 **Task Description:**
 This task extends the CharmPheno computational phenotyping work into the CHARMTwinsight platform, focusing on phenotype model serving, patient-facing phenotype characterization capabilities, and interoperability.
 Trained phenotype models will be integrated with the existing CHARMTwinsight model hosting service to enable phenotype assignment and characterization for individual patient records.
-The task will explore phenotype characterization workflows, phenotype-trajectory visualization, and integration with other CHARM tools, including the mobile application MyCharm with local and hosted profiling.
+The task will explore phenotype characterization workflows, profile visualizations, and integration with other CHARM tools, including the mobile application MyCharm with local and hosted profiling.
 
 **Location:** Work will be performed at UNC
 

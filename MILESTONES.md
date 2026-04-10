@@ -4,16 +4,16 @@
 
 **Task Description:**
 This task develops the **CharmPheno** computational phenotyping capability:
-an interpretable approach to discovering interpretable and clinically meaningful patient *phenotypes profiles* from structured health records as a foundation for personalized health insight.
+an interpretable approach to discovering interpretable and clinically meaningful patient *phenotype profiles* from structured health records as a foundation for personalized health insight.
 The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
 and applies it to discover latent phenotypes contributing to profiles.
 It also characterizes the resulting phenotypes and profiles in general, in specific populations (rare disease and pediatric oncology patients), and at the individual level.
 Patient phenotype profiles are interpretable, probabilistic representations that serve a range of downstream capabilities,
-including profile-based matching,
+including profile-based patient matching ("patients-like-me"),
 profiles that evolve over time,
-and generation of plausible patient profiles for risk exploration and what-if analyses.
-Trained phenotype models are suitable for deployment through the existing CHARMTwinsight model hosting infrastructure
-and for lightweight inference scenarios including on-device deployment (e.g. MyCharm) where a patient's own data need not leave their device.
+and autoregressive generation of patient profiles for risk exploration and what-if analyses.
+Trained profile-generating models do not contain sensitive information, and are suitable for deployment through the existing CHARMTwinsight model hosting infrastructure. 
+They are also lightweight, supporting on-device deployment (e.g. MyCharm) where a patient's own data need not leave their device.
 
 **Location:** Work will be performed at UNC
 

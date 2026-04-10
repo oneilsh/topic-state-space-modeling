@@ -1,8 +1,18 @@
 ## **Task C7.T1 (CharmPheno)**
 
-**Objective:** *Develop and integrate CharmPheno: an interpretable computational phenotyping capability for unsupervised discovery and characterization of clinical phenotypes from patient health records, with hosted integration into the CHARMTwinsight platform*
+**Objective:** *Develop and integrate CharmPheno: an interpretable computational phenotyping capability for discovery and characterization of clinical phenotypes from patient health records, with hosted integration into the CHARMTwinsight platform*
 
-**Task Description:** This task develops the **CharmPheno** computational phenotyping capability: an interpretable approach to discovering clinically meaningful patient phenotypes from structured patient health records, supporting per-patient phenotype profiles as a foundation for personalized health insight. The work develops a reusable, distributed inference framework that enables training on large-scale clinical data, applies it to discover latent clinical phenotypes, and characterizes those phenotypes in general and in specific populations (e.g. rare disease or pediatric oncology patients). Patient phenotype profiles are interpretable, probabilistic representations that serve as a substrate for a range of downstream capabilities, including phenotype-based patient similarity ("patients like me"), longitudinal profiles that evolve over time, and generation of plausible patient trajectories for risk exploration and what-if analysis. Trained phenotype models are integrated with the existing CHARMTwinsight model hosting infrastructure to support per-patient phenotype characterization through the platform.
+**Task Description:**
+This task develops the **CharmPheno** computational phenotyping capability:
+an interpretable approach to discovering interpretable and clinically meaningful patient *phenotype profiles* from structured health records as a foundation for personalized health insight.
+The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
+and applies it to discover latent phenotypes contributing to profiles.
+It also characterizes the resulting phenotypes and profiles in general, in specific populations (rare disease and pediatric oncology patients), and at the individual level.
+Patient phenotype profiles are interpretable, probabilistic representations that serve a range of downstream capabilities,
+including profile-based patient matching ("patients-like-me"),
+profiles that evolve over time,
+and autoregressive generation of patient profiles for risk exploration and what-if analyses.
+Trained profile-generating models do not contain sensitive information, and are integrated with the existing CHARMTwinsight model hosting infrastructure to support per-patient phenotype characterization through the platform.
 
 **Location:** Work will be performed at UNC
 

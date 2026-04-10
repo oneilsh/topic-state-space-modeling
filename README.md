@@ -174,6 +174,3 @@ graph LR
   discovery framework and applies it to clinical data; Year 2 integrates trained
   CharmPheno models with CHARMTwinsight model hosting and develops per-patient
   phenotype characterization capabilities.
-
-
-Adjustments to fix request in PR

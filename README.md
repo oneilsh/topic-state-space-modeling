@@ -3,7 +3,9 @@
 **CharmPheno** is an interpretable **computational phenotyping** capability:
 an interpretable approach to discovering interpretable and clinically meaningful patient *phenotype profiles* from structured health records as a foundation for personalized health insight.
 
-<img src="profile_example.png" width="65%">
+<div align="center">
+  <img src="profile_example.png" width="65%">
+</div>
 
 The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
 and applies it to discover latent phenotypes contributing to profiles.

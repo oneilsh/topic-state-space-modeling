@@ -1,13 +1,19 @@
 # CharmPheno: Interpretable Computational Phenotyping for Patient-Owned Health Insight
 
-**CharmPheno** is an interpretable **computational phenotyping** capability for discovery and characterization of patient phenotypes from large-scale structured patient health records. The approach uses a Bayesian nonparametric model whose output is interpretable (each phenotype is a clinically-readable distribution over medical codes or events) and uncertainty-aware. The phenotype model is trained on large-scale clinical data via a distributed [Bayesian variational-inference](https://en.wikipedia.org/wiki/Variational_Bayesian_methods) (VI) framework, and then applied per-patient using the trained population-level parameters and that patient's own data. Cohort-based aggregrate phenotypes are also possible for **pediatric, pediatric oncology, and rare-disease populations**, and they may be compared and contrasted to control cohorts as well.
+**CharmPheno** is an interpretable **computational phenotyping** capability:
+an interpretable approach to discovering interpretable and clinically meaningful patient *phenotype profiles* from structured health records as a foundation for personalized health insight.
 
-Trained CharmPheno models are delivered through the existing CHARMTwinsight model-hosting service. Because trained models contain only compact population-level parameters and no patient data, on-device inference scenarios, in which the trained model is shipped to a patient device (e.g. via MyCharm) and inference runs locally against the patient's own data, are also a natural deployment target and are investigated as part of the work.
+<img src="profile_example.png" width="65%">
 
-**This work supports:**
-
-- **Patient-controlled longitudinal self-summarization** — a patient's phenotype profile can be maintained and updated over time as new clinical data becomes available, producing a dynamic structured summary of the patient's clinical picture.
-- **Phenotype-based patient similarity and trajectory exploration** — phenotype profiles are a substrate for downstream capabilities including patient similarity ("patients like me") and, when combined with dynamic models, generation of plausible patient trajectories for risk exploration and what-if analysis.
+The work develops a reusable, distributed-compute inference framework that enables training on large-scale clinical data,
+and applies it to discover latent phenotypes contributing to profiles.
+It also characterizes the resulting phenotypes and profiles in general, in specific populations (rare disease and pediatric oncology patients), and at the individual level.
+Patient phenotype profiles are interpretable, probabilistic representations that serve a range of downstream capabilities,
+including profile-based patient matching ("patients-like-me"),
+profiles that evolve over time,
+and autoregressive generation of patient profiles for risk exploration and what-if analyses.
+Trained profile-generating models do not contain sensitive information, and are suitable for deployment through the existing CHARMTwinsight model hosting infrastructure.
+They are also lightweight, supporting on-device deployment (e.g. MyCharm) where a patient's own data need not leave their device.
 
 <div style="max-width: 70%;">
 
